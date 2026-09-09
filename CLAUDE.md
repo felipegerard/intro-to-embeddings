@@ -1,0 +1,171 @@
+# intro-to-embeddings
+
+Curso de embeddings para imágenes — Maestría en Ciencia de Datos, ITAM.
+Tres sesiones de 2 h. Los alumnos ya llevaron machine learning y/o deep learning.
+
+Este archivo guarda las decisiones del curso. No repite lo que el código ya dice.
+
+## Qué es un embedding aquí
+
+`backbone + head → vector normalizado`, y el parecido se mide con coseno. El caso
+de uso es **open-set**: clasificación donde pueden aparecer clases nuevas,
+reconocimiento facial, búsqueda por similitud, deduplicación.
+
+## Estructura del curso
+
+| Sesión | Contenido |
+|---|---|
+| 1 · Teoría | Recap de redes (0:15), el problema open-set (0:20), arquitectura (0:20), receso (0:05), pérdidas (0:40), evaluación (0:20), producción (0:15) |
+| 2 · Implementación | Recap de torch (0:20), recorrido del código (0:40), receso (0:05), los datos (0:30), el ejercicio (0:15), arranque en vivo (0:10) |
+| 3 · Presentaciones | 4 equipos × 20 min (1:20), receso (0:05), comparación cruzada (0:20), cierre (0:15) |
+
+Equipos de 3–4 personas, 3–4 equipos. Una semana para el ejercicio entre la
+sesión 2 y la 3.
+
+## Decisiones de diseño del ejercicio
+
+### ArcFace, no triplet
+
+La pérdida implementada y entregada es **ArcFace**. Triplet queda como punto
+extra, no como base. Las razones, por si se quiere revisitar:
+
+- Con ArcFace no hace falta muestreo PK ni minería de negativos: batches
+  aleatorios bastan. Eso quita la mitad del código y casi todos los bugs.
+- Converge estable, como un clasificador normal.
+- Es lo que se usa hoy en producción. Enseñar triplet como método principal es
+  enseñar algo ya superado.
+
+Consecuencia: el sampler PK **salió** de la base del ejercicio. Sobrevive como
+extra en su forma útil (sampler balanceado por clase, para datos
+desbalanceados).
+
+Triplet sí se cubre en teoría, ~10 min, porque la intuición geométrica de
+ancla/positivo/negativo hace legible el margen angular, y porque se lo van a
+topar en cualquier repo.
+
+### Reparto: qué se les da y qué implementan
+
+El ejercicio es sobre **datos**, no sobre modelado. Se les da casi todo el
+código; lo que falta es lo que toca los datos.
+
+| Archivo | Estado |
+|---|---|
+| `src/embeddings/data.py` | **Lo implementan ellos** |
+| `src/embeddings/models.py` | Dado — backbones + head |
+| `src/embeddings/losses.py` | Dado — ArcFace |
+| `src/embeddings/train.py` | Dado — loop completo |
+| `src/embeddings/config.py` | Dado |
+| `src/embeddings/evaluate.py` | **Dado y congelado** |
+| `scripts/make_synthetic.py` | Dado |
+| `scripts/run_train.py` | Dado |
+
+Las tres piezas de `data.py`:
+
+- `IdentityImageDataset` (~40 líneas)
+- `make_open_set_split` (~30 líneas)
+- `build_transforms` (~15 líneas)
+
+Más el trabajo real: elegir dataset, convertirlo a carpeta-por-identidad,
+mirarlo, limpiarlo, decidir augmentations.
+
+### La evaluación va congelada
+
+`evaluate.py` no se toca. Recall@1, Recall@5, mAP y TAR@FAR. Si cada equipo mide
+distinto, la tabla comparativa de la sesión 3 no significa nada. Si alguien
+reporta un bug, se arregla para todos.
+
+Detalle que importa: **una query nunca cuenta como su propio acierto**. Sin eso
+todos los recall dan casi 1.0.
+
+### Datos: una carpeta por identidad
+
+```
+data/<dataset>/<id>/<imagen>.jpg
+```
+
+El nombre de la carpeta es la identidad. No hace falta CSV. Distinción que se
+repite todo el curso: **"perro" es una clase, "Firulais" es una identidad.**
+
+El split reparte **identidades**, no imágenes. Ninguna identidad puede estar en
+train y en test a la vez. Hay un test que falla si
+`set(train_ids) & set(test_ids)` no está vacío.
+
+### Datasets
+
+Todos corren **MNIST** (entrenar 0–7, evaluar 8–9) como piso común y única
+columna comparable entre equipos. Más un segundo dataset a su elección:
+
+1. MNIST / Fashion-MNIST — obligatorio
+2. Omniglot — recomendado, se reservan alfabetos completos
+3. Sintético del repo (`make_synthetic.py`) — el de mayor valor pedagógico,
+   permite ablaciones controladas
+4. CIFAR-100 — 80 clases train, 20 test
+5. CUB-200-2011 — para quien tenga GPU
+
+Pueden traer otro si pueden definir el split por identidad sin fuga.
+
+### Backbones
+
+`small_cnn` (28×28 en CPU), `resnet18` preentrenada, `mobilenet_v3_small`. El
+head base se da funcionando; ampliarlo a 3–4 capas es extra, con ablación.
+
+Nadie tiene GPU institucional. Se asume que al menos una persona por equipo
+tiene una Mac con MPS o una PC gamer. Todo debe correr en CPU con pocas clases.
+
+### Calificación
+
+50% resultado técnico + 50% presentación. Un modelo con malos números y buen
+análisis saca ~8; buenos números sin explicación, no. Máximo **2 puntos extra**,
+uno por cosa (triplet, CosFace, sampler balanceado, fine-tuning por capas,
+ablación de head/dimensión, baseline DINOv2 congelado, índice FAISS/HNSW).
+
+## Convenciones de código
+
+- Identificadores y nombres de variables **en inglés**; comentarios y docstrings
+  **en español**.
+- Español neutro latinoamericano. Nunca voseo. Acentos y ñ siempre, incluido en
+  comentarios.
+- Comentarios cortos y escasos, pero el público son alumnos que apenas conocen
+  PyTorch: **sí vale explicar lo que a un experto le parecería obvio** cuando es
+  una trampa real o un formato no evidente. Nada de narrar la línea siguiente.
+- f-strings, no `.format()` ni `%`.
+- Indentación multilínea estilo C: romper después del paréntesis, parámetros a un
+  nivel, cerrar en la indentación original.
+- Sin manejo de errores, perillas de configuración ni abstracciones que la tarea
+  no pidió.
+
+## Gráficas
+
+El autor tiene deuteranomalía. En cualquier gráfica que produzca el código o el
+material:
+
+- Nunca distinguir series solo por tono, y nunca rojo contra verde.
+- Paleta segura para daltonismo (Okabe-Ito). En el material, azul `#0072B2` es
+  "positivo / misma identidad" y ámbar `#E69F00` es "negativo / distinta
+  identidad", siempre con marcador distinto además del color.
+- Líneas gruesas (~2–2.5 pt) y opacidad alta (~0.85).
+
+## Material
+
+`slides/embeddings.html` — un solo archivo autocontenido, 51 láminas, 16:9.
+Navegación: `←` `→` navegar, `O` índice, `S` notas del ponente, `F` pantalla
+completa. `Cmd+P` en Chrome saca el PDF.
+
+Marca ITAM: verde `#006852` y `#004434`, logo blanco sobre fondo oscuro en la
+cinta inferior. Bricolage Grotesque para display, IBM Plex Sans para cuerpo, IBM
+Plex Mono para código.
+
+## Licencias
+
+- Código: **MIT** (`LICENSE`).
+- Material didáctico: **CC BY-NC-ND 4.0** (`LICENSE-MATERIAL.md`). No se puede
+  usar para dar clases de paga ni para capacitación en empresas sin permiso.
+- El logo del ITAM es del ITAM. Los datasets conservan su propia licencia; este
+  repo no los redistribuye.
+
+## Git
+
+- Commits en español con prefijo convencional (`feat`, `fix`, `docs`…).
+- Cortos: línea de asunto y a lo mucho unas viñetas.
+- Sin líneas de atribución a Claude ni a IA.
+- La identidad de este repo es `felipegerard@gmail.com` (configurada como local).

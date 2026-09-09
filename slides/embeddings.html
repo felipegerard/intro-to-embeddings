@@ -1,0 +1,2236 @@
+<title>Embeddings para imágenes</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --paper:#F2F5F3; --ink:#0B1512; --ink-soft:#44574F; --ink-faint:#7B8D86;
+  --rule:#D2DDD8; --surface:#FFFFFF; --surface-2:#E7EEEA;
+  --green:#006852; --green-deep:#004434; --green-tint:#D9E8E2; --green-ink:#005745;
+  --c-pos:#0072B2; --c-neg:#E69F00; --c-3:#CC79A7; --c-4:#56B4E9; --c-5:#D55E00;
+  --c-pos-soft:#D2E5F3; --c-neg-soft:#F9E8C8;
+  --shadow:0 1px 2px rgba(11,21,18,.06), 0 10px 28px rgba(11,21,18,.07);
+  --f-display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  --f-mono:"IBM Plex Mono",SFMono-Regular,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0A1310; --ink:#E4EDE9; --ink-soft:#A2B4AD; --ink-faint:#6F837B;
+    --rule:#21322B; --surface:#111E19; --surface-2:#18291F;
+    --green:#3FA88C; --green-deep:#00281E; --green-tint:#14302A; --green-ink:#5CBFA3;
+    --c-pos:#5AA9DD; --c-neg:#EDB652; --c-3:#DE9CC0; --c-4:#7CC6F0; --c-5:#EE8244;
+    --c-pos-soft:#173242; --c-neg-soft:#3A2E14;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0A1310; --ink:#E4EDE9; --ink-soft:#A2B4AD; --ink-faint:#6F837B;
+  --rule:#21322B; --surface:#111E19; --surface-2:#18291F;
+  --green:#3FA88C; --green-deep:#00281E; --green-tint:#14302A; --green-ink:#5CBFA3;
+  --c-pos:#5AA9DD; --c-neg:#EDB652; --c-3:#DE9CC0; --c-4:#7CC6F0; --c-5:#EE8244;
+  --c-pos-soft:#173242; --c-neg-soft:#3A2E14;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);
+  margin:0;min-height:100vh;display:grid;place-items:center;overflow:hidden}
+
+/* ---------- escenario 16:9 ---------- */
+#viewport{width:100vw;height:100vh;display:grid;place-items:center;position:relative}
+#stage{width:1280px;height:720px;position:relative;transform-origin:center center;
+  background:var(--paper);flex:none}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;
+  padding:52px 68px 78px;background:var(--paper)}
+.slide.on{display:flex}
+
+/* ---------- cinta inferior ---------- */
+.ribbon{position:absolute;left:0;right:0;bottom:0;height:44px;background:var(--green-deep);
+  display:flex;align-items:center;gap:18px;padding:0 24px 0 28px;color:#fff}
+.ribbon img{height:19px;width:auto;opacity:.95;flex:none}
+.ribbon .sep{width:1px;height:18px;background:rgba(255,255,255,.28);flex:none}
+.ribbon .where{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.11em;
+  text-transform:uppercase;color:rgba(255,255,255,.78);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.ribbon .num{margin-left:auto;font-family:var(--f-mono);font-size:12px;
+  color:rgba(255,255,255,.62);font-variant-numeric:tabular-nums;flex:none}
+
+/* ---------- tipografía ---------- */
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--green-ink);margin:0 0 12px}
+h1{font-family:var(--f-display);font-weight:800;font-size:62px;line-height:1.02;margin:0;
+  letter-spacing:-.02em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:40px;line-height:1.08;margin:0 0 6px;
+  letter-spacing:-.015em;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 6px;letter-spacing:-.005em}
+.lede{font-size:20px;line-height:1.45;color:var(--ink-soft);margin:0;max-width:62ch}
+.body{font-size:17.5px;line-height:1.5;color:var(--ink-soft);margin:0;max-width:64ch}
+.small{font-size:15px;line-height:1.45;color:var(--ink-faint);margin:0}
+strong{color:var(--ink);font-weight:600}
+em{font-style:normal;color:var(--green-ink);font-weight:600}
+code{font-family:var(--f-mono);font-size:.92em;background:var(--surface-2);
+  padding:1px 5px;border-radius:3px;color:var(--ink)}
+.head{margin-bottom:22px;flex:none}
+.fill{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center}
+.cols{display:grid;gap:26px}
+.c2{grid-template-columns:1fr 1fr}
+.c3{grid-template-columns:repeat(3,1fr)}
+.c2-38{grid-template-columns:.62fr 1fr}
+.c2-62{grid-template-columns:1fr .62fr}
+.vlist{display:flex;flex-direction:column;gap:14px}
+
+/* ---------- piezas ---------- */
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:10px;
+  padding:18px 20px;box-shadow:var(--shadow)}
+.card.flat{box-shadow:none;background:var(--surface-2);border-color:transparent}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;
+  text-transform:uppercase;padding:3px 8px;border-radius:99px;background:var(--green-tint);
+  color:var(--green-ink);white-space:nowrap}
+.tag.pos{background:var(--c-pos-soft);color:var(--c-pos)}
+.tag.neg{background:var(--c-neg-soft);color:var(--c-5)}
+ul.ticks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:11px;
+  font-size:17px;line-height:1.42;color:var(--ink-soft)}
+ul.ticks li{padding-left:22px;position:relative}
+ul.ticks li::before{content:"";position:absolute;left:2px;top:.55em;width:8px;height:2px;
+  background:var(--green);border-radius:2px}
+ul.ticks.pro li::before{background:var(--c-pos)}
+ul.ticks.con li::before{background:var(--c-neg)}
+table{border-collapse:collapse;width:100%;font-size:16px}
+th{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-faint);text-align:left;font-weight:400;padding:0 14px 9px 0;
+  border-bottom:1px solid var(--rule);vertical-align:bottom}
+td{padding:11px 14px 11px 0;border-bottom:1px solid var(--rule);color:var(--ink-soft);
+  vertical-align:top;line-height:1.38}
+tr:last-child td{border-bottom:none}
+td.k{color:var(--ink);font-weight:500}
+.num-col{font-variant-numeric:tabular-nums}
+figure{margin:0;display:flex;flex-direction:column;gap:9px;align-items:center}
+figure svg{max-width:100%;height:auto;display:block;color:var(--ink)}
+figcaption{font-size:14px;line-height:1.4;color:var(--ink-faint);text-align:center;max-width:72ch}
+pre{margin:0;font-family:var(--f-mono);font-size:14.5px;line-height:1.62;
+  background:var(--surface);border:1px solid var(--rule);border-radius:9px;
+  padding:16px 18px;overflow-x:auto;color:var(--ink);box-shadow:var(--shadow)}
+pre .kw{color:var(--c-3)} pre .st{color:var(--c-pos)} pre .cm{color:var(--ink-faint);font-style:italic}
+pre .fn{color:var(--green-ink)} pre .nu{color:var(--c-5)}
+pre .todo{background:var(--c-neg-soft);color:var(--c-5);border-radius:3px;padding:0 4px}
+.formula{font-family:var(--f-mono);font-size:19px;color:var(--ink);background:var(--surface-2);
+  border-left:3px solid var(--green);border-radius:0 7px 7px 0;padding:13px 18px;line-height:1.6}
+.kpi{display:flex;flex-direction:column;gap:2px}
+.kpi b{font-family:var(--f-display);font-size:34px;font-weight:700;line-height:1;color:var(--green-ink)}
+.kpi span{font-size:14px;color:var(--ink-faint)}
+
+/* ---------- portada y divisores ---------- */
+.cover,.divider{background:var(--green-deep);color:#fff;padding:0}
+.cover .inner,.divider .inner{flex:1;display:flex;flex-direction:column;justify-content:center;
+  padding:64px 68px 88px;position:relative;z-index:1}
+.cover h1,.divider h1{color:#fff;font-size:74px}
+.cover .lede,.divider .lede{color:rgba(255,255,255,.76)}
+.cover .eyebrow,.divider .eyebrow{color:rgba(255,255,255,.62)}
+.cover .meta{display:flex;gap:34px;margin-top:38px;flex-wrap:wrap}
+.cover .meta div{display:flex;flex-direction:column;gap:3px}
+.cover .meta dt{font-family:var(--f-mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;
+  color:rgba(255,255,255,.5)}
+.cover .meta dd{margin:0;font-size:17px;color:#fff}
+.arcmark{position:absolute;right:-70px;bottom:-40px;width:520px;height:520px;opacity:.14;
+  color:#fff;pointer-events:none}
+.divider .num{font-family:var(--f-display);font-size:150px;font-weight:800;line-height:.8;
+  color:rgba(255,255,255,.17);margin:0 0 10px;letter-spacing:-.04em}
+.divider .plan{display:flex;gap:10px;margin-top:30px;flex-wrap:wrap}
+.divider .plan span{font-family:var(--f-mono);font-size:12.5px;padding:6px 12px;border-radius:99px;
+  border:1px solid rgba(255,255,255,.26);color:rgba(255,255,255,.82)}
+.cover .ribbon,.divider .ribbon{background:rgba(0,0,0,.26)}
+
+/* receso */
+.pausa{background:var(--green-tint)}
+.pausa .inner{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px}
+.pausa h1{font-size:66px;color:var(--green-ink)}
+
+/* ---------- notas del ponente ---------- */
+#notes{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:2px solid var(--green);
+  padding:14px 20px;font-size:15px;line-height:1.5;color:var(--ink-soft);max-height:32vh;overflow-y:auto;
+  z-index:40;box-shadow:0 -8px 24px rgba(0,0,0,.13)}
+#notes b{color:var(--ink)}
+.notes{display:none}
+body:not(.show-notes) #notes{display:none}
+
+/* ---------- índice ---------- */
+#index{position:fixed;inset:0;background:var(--paper);z-index:50;overflow-y:auto;padding:36px 44px 60px}
+body:not(.show-index) #index{display:none}
+#index h2{margin-bottom:20px}
+.idx-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
+.idx-grid h3{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--green-ink);border-bottom:1px solid var(--rule);padding-bottom:8px;margin-bottom:10px}
+.idx-grid ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
+.idx-grid button{display:flex;gap:10px;width:100%;text-align:left;background:none;border:0;
+  font:inherit;font-size:14.5px;color:var(--ink-soft);padding:5px 7px;border-radius:5px;cursor:pointer}
+.idx-grid button:hover{background:var(--surface-2);color:var(--ink)}
+.idx-grid button:focus-visible{outline:2px solid var(--green);outline-offset:1px}
+.idx-grid button i{font-family:var(--f-mono);font-style:normal;color:var(--ink-faint);
+  font-variant-numeric:tabular-nums;flex:none;min-width:20px}
+.idx-grid button.cur{background:var(--green-tint);color:var(--green-ink);font-weight:500}
+
+#help{position:fixed;right:14px;top:12px;z-index:60;font-family:var(--f-mono);font-size:11px;
+  letter-spacing:.06em;color:var(--ink-faint);background:var(--surface);border:1px solid var(--rule);
+  border-radius:99px;padding:5px 12px;opacity:.5}
+#help:hover{opacity:1}
+
+@media (prefers-reduced-motion:no-preference){
+  .slide.on{animation:fade .22s ease-out}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+}
+
+@page{size:1280px 720px;margin:0}
+@media print{
+  body{display:block;overflow:visible;background:#fff}
+  #viewport{width:auto;height:auto;display:block}
+  #stage{transform:none!important;width:1280px;height:auto}
+  .slide{display:flex!important;position:relative;inset:auto;width:1280px;height:720px;
+    break-after:page;box-shadow:none}
+  #help,#notes,#index{display:none!important}
+}
+</style>
+
+<div id="viewport"><div id="stage"></div></div>
+<div id="notes"></div>
+<div id="index"><h2>Índice</h2><div class="idx-grid" id="idxGrid"></div></div>
+<div id="help">← → navegar · O índice · S notas · F pantalla completa</div>
+
+<template id="deck">
+
+<!-- ============ PORTADA ============ -->
+<section class="slide cover" data-sec="Maestría en Ciencia de Datos" data-title="Portada" data-nonum>
+  <svg class="arcmark" viewBox="0 0 200 200" aria-hidden="true" fill="none" stroke="currentColor">
+    <circle cx="100" cy="100" r="86" stroke-width="1.2"/>
+    <circle cx="100" cy="100" r="60" stroke-width="1.2" stroke-dasharray="3 6"/>
+    <line x1="100" y1="100" x2="174" y2="56" stroke-width="1.6"/>
+    <line x1="100" y1="100" x2="152" y2="170" stroke-width="1.6"/>
+    <path d="M 148 74 A 60 60 0 0 1 130 143" stroke-width="2.4"/>
+    <circle cx="174" cy="56" r="5" fill="currentColor" stroke="none"/>
+    <circle cx="152" cy="170" r="5" fill="currentColor" stroke="none"/>
+  </svg>
+  <div class="inner">
+    <p class="eyebrow">ITAM · Maestría en Ciencia de Datos</p>
+    <h1>Embeddings para imágenes</h1>
+    <p class="lede" style="margin-top:20px">Cómo enseñarle a una red a medir parecido, y no solo a repartir etiquetas.</p>
+    <div class="meta">
+      <div><dt>Duración</dt><dd>3 sesiones · 6 horas</dd></div>
+      <div><dt>Requisitos</dt><dd>Machine learning · Deep learning</dd></div>
+      <div><dt>Entregable</dt><dd>Ejercicio por equipo</dd></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ AGENDA DEL CURSO ============ -->
+<section class="slide" data-sec="Maestría en Ciencia de Datos" data-title="Las tres sesiones">
+  <div class="head">
+    <p class="eyebrow">El curso completo</p>
+    <h2>Tres sesiones</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c3">
+      <div class="card">
+        <span class="tag">Sesión 1 · 2 h</span>
+        <h3 style="margin-top:13px">Teoría</h3>
+        <p class="small" style="color:var(--ink-soft);margin-bottom:12px">Qué es un espacio de embeddings, cómo se entrena y cómo se mide.</p>
+        <ul class="ticks" style="font-size:15px;gap:8px">
+          <li>Open-set vs. closed-set</li><li>Backbone + head, coseno</li>
+          <li>ArcFace y el margen angular</li><li>Recall@k, TAR@FAR</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag">Sesión 2 · 2 h</span>
+        <h3 style="margin-top:13px">Implementación</h3>
+        <p class="small" style="color:var(--ink-soft);margin-bottom:12px">El código está casi completo. Lo que falta es todo lo que toca los datos.</p>
+        <ul class="ticks" style="font-size:15px;gap:8px">
+          <li>Recorrido del repositorio</li><li>Estructura de los datos</li>
+          <li>Split sin fuga de identidades</li><li>Arranque del ejercicio</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag">Sesión 3 · 2 h</span>
+        <h3 style="margin-top:13px">Presentaciones</h3>
+        <p class="small" style="color:var(--ink-soft);margin-bottom:12px">Cada equipo presenta; comparamos resultados entre todos.</p>
+        <ul class="ticks" style="font-size:15px;gap:8px">
+          <li>20 min por equipo</li><li>Tabla comparativa en vivo</li>
+          <li>Qué explicó las diferencias</li><li>Cierre y Q&amp;A</li>
+        </ul>
+      </div>
+    </div>
+    <p class="small" style="margin-top:26px;text-align:center">Entre la sesión 2 y la 3 tienen <strong>una semana</strong> para el ejercicio.</p>
+  </div>
+  <div class="notes">El ejercicio se anuncia hoy pero se explica completo al final de la sesión 2. Aquí solo que sepan que existe y que es por equipo.</div>
+</section>
+
+<!-- ============ DIVISOR S1 ============ -->
+<section class="slide divider" data-sec="Sesión 1 · Teoría" data-title="Divisor — Sesión 1" data-nonum>
+  <svg class="arcmark" viewBox="0 0 200 200" aria-hidden="true" fill="none" stroke="currentColor">
+    <circle cx="100" cy="100" r="86" stroke-width="1.2"/>
+    <circle cx="100" cy="100" r="60" stroke-width="1.2" stroke-dasharray="3 6"/>
+    <line x1="100" y1="100" x2="174" y2="56" stroke-width="1.6"/>
+    <line x1="100" y1="100" x2="152" y2="170" stroke-width="1.6"/>
+    <path d="M 148 74 A 60 60 0 0 1 130 143" stroke-width="2.4"/>
+  </svg>
+  <div class="inner">
+    <p class="num">01</p>
+    <p class="eyebrow">Sesión 1 · 2 horas</p>
+    <h1>Teoría</h1>
+    <div class="plan">
+      <span>0:15 · Recap de redes</span><span>0:20 · El problema</span>
+      <span>0:20 · Arquitectura</span><span>0:05 · Receso</span>
+      <span>0:40 · Funciones de pérdida</span><span>0:20 · Evaluación</span>
+      <span>0:15 · En producción</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RECAP 1 ============ -->
+<section class="slide" data-sec="Sesión 1 · Recap de redes" data-title="Una red de clasificación por dentro">
+  <div class="head">
+    <p class="eyebrow">Recap · 1 de 3</p>
+    <h2>Una red de clasificación, por dentro</h2>
+  </div>
+  <div class="fill">
+    <figure>
+      <svg viewBox="0 0 1120 240" role="img" aria-label="Flujo de una red de clasificación: imagen, backbone convolucional, feature map, pooling, vector de características, capa totalmente conectada, logits y softmax.">
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <g fill="none" stroke="currentColor" stroke-width="1.6" marker-end="url(#ar)" opacity=".55">
+          <line x1="112" y1="96" x2="160" y2="96"/><line x1="288" y1="96" x2="336" y2="96"/>
+          <line x1="452" y1="96" x2="500" y2="96"/><line x1="592" y1="96" x2="640" y2="96"/>
+          <line x1="732" y1="96" x2="780" y2="96"/><line x1="872" y1="96" x2="920" y2="96"/>
+        </g>
+        <rect x="24" y="52" width="88" height="88" rx="5" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.4" opacity=".9"/>
+        <text x="68" y="102" text-anchor="middle" font-size="13" fill="currentColor" font-family="var(--f-mono)">224×224×3</text>
+        <rect x="160" y="44" width="128" height="104" rx="7" fill="var(--green-tint)" stroke="var(--green)" stroke-width="1.8"/>
+        <text x="224" y="90" text-anchor="middle" font-size="15" font-weight="600" fill="var(--green-ink)">backbone</text>
+        <text x="224" y="110" text-anchor="middle" font-size="12.5" fill="var(--green-ink)" opacity=".8">ResNet, ViT…</text>
+        <g fill="var(--surface-2)" stroke="currentColor" stroke-width="1.2" opacity=".9">
+          <rect x="336" y="58" width="96" height="76" rx="4"/><rect x="343" y="51" width="96" height="76" rx="4"/>
+          <rect x="350" y="44" width="96" height="76" rx="4"/></g>
+        <text x="398" y="163" text-anchor="middle" font-size="12.5" fill="currentColor" opacity=".72" font-family="var(--f-mono)">7×7×512</text>
+        <text x="398" y="182" text-anchor="middle" font-size="12.5" fill="currentColor" opacity=".55">feature map</text>
+        <rect x="500" y="66" width="92" height="60" rx="5" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.3"/>
+        <text x="546" y="94" text-anchor="middle" font-size="13.5" fill="currentColor">pooling</text>
+        <text x="546" y="112" text-anchor="middle" font-size="11.5" fill="currentColor" opacity=".6">global avg</text>
+        <g fill="var(--c-pos)" opacity=".85">
+          <rect x="646" y="52" width="34" height="12" rx="2"/><rect x="646" y="68" width="34" height="12" rx="2"/>
+          <rect x="646" y="84" width="34" height="12" rx="2"/><rect x="646" y="100" width="34" height="12" rx="2"/>
+          <rect x="646" y="116" width="34" height="12" rx="2"/></g>
+        <text x="663" y="163" text-anchor="middle" font-size="12.5" fill="currentColor" opacity=".72" font-family="var(--f-mono)">512</text>
+        <text x="663" y="182" text-anchor="middle" font-size="12.5" fill="var(--c-pos)" font-weight="600">vector</text>
+        <rect x="780" y="60" width="92" height="72" rx="5" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.3"/>
+        <text x="826" y="92" text-anchor="middle" font-size="13.5" fill="currentColor">FC</text>
+        <text x="826" y="110" text-anchor="middle" font-size="11.5" fill="currentColor" opacity=".6">512 → 10</text>
+        <g fill="currentColor" opacity=".45">
+          <rect x="926" y="58" width="10" height="24" rx="2"/><rect x="940" y="46" width="10" height="36" rx="2"/>
+          <rect x="954" y="66" width="10" height="16" rx="2"/><rect x="968" y="52" width="10" height="30" rx="2"/>
+          <rect x="982" y="70" width="10" height="12" rx="2"/></g>
+        <line x1="920" y1="82" x2="1000" y2="82" stroke="currentColor" stroke-width="1.2" opacity=".5"/>
+        <text x="960" y="105" text-anchor="middle" font-size="12.5" fill="currentColor" opacity=".72" font-family="var(--f-mono)">logits</text>
+        <text x="960" y="124" text-anchor="middle" font-size="12.5" fill="currentColor" opacity=".55">→ softmax</text>
+        <rect x="640" y="34" width="48" height="128" rx="7" fill="none" stroke="var(--c-pos)" stroke-width="2" stroke-dasharray="5 4"/>
+        <text x="663" y="214" text-anchor="middle" font-size="14" font-weight="600" fill="var(--c-pos)">aquí está lo interesante</text>
+      </svg>
+      <figcaption>La penúltima capa ya es un vector de 512 números que describe la imagen. La última capa solo lo reparte entre las clases que existían al entrenar.</figcaption>
+    </figure>
+  </div>
+  <div class="notes"><b>0:15 en total para el recap.</b> Aquí ~5 min. La idea a plantar: el vector antes de la FC ya es una descripción de la imagen. Todo el curso trata de hacer que ese vector sea bueno.</div>
+</section>
+
+<!-- ============ RECAP 2 ============ -->
+<section class="slide" data-sec="Sesión 1 · Recap de redes" data-title="El vector penúltimo ya sirve… a medias">
+  <div class="head">
+    <p class="eyebrow">Recap · 2 de 3</p>
+    <h2>Ese vector ya sirve. A medias.</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2" style="align-items:start">
+      <div class="vlist">
+        <div class="card">
+          <span class="tag pos">Lo que sí</span>
+          <ul class="ticks pro" style="margin-top:12px">
+            <li>Imágenes parecidas caen en zonas parecidas del espacio.</li>
+            <li>Funciona sin reentrenar: se saca de cualquier red preentrenada.</li>
+            <li>Es la base de <em>transfer learning</em>: congelas el backbone y entrenas solo la cabeza.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="tag neg">Lo que no</span>
+          <ul class="ticks con" style="margin-top:12px">
+            <li>Se entrenó para <strong>separar las clases del entrenamiento</strong>, no para medir parecido.</li>
+            <li>Nada obliga a que dos fotos de la misma cosa queden cerca si esa cosa no era una clase.</li>
+            <li>Las distancias no son comparables entre pares: no hay un umbral que signifique lo mismo en todo el espacio.</li>
+          </ul>
+        </div>
+      </div>
+      <figure>
+        <svg viewBox="0 0 480 400" role="img" aria-label="Comparación de un espacio de características entrenado para clasificar contra uno entrenado para medir parecido: en el primero las clases se separan pero quedan dispersas, en el segundo forman grupos compactos.">
+          <rect x="10" y="26" width="212" height="212" rx="8" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.4"/>
+          <text x="116" y="18" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor">entrenado para clasificar</text>
+          <line x1="116" y1="26" x2="116" y2="238" stroke="currentColor" stroke-width="1.2" opacity=".3" stroke-dasharray="4 4"/>
+          <g fill="var(--c-pos)" opacity=".8">
+            <circle cx="48" cy="62" r="6"/><circle cx="86" cy="104" r="6"/><circle cx="38" cy="150" r="6"/>
+            <circle cx="92" cy="196" r="6"/><circle cx="62" cy="212" r="6"/><circle cx="70" cy="52" r="6"/></g>
+          <g fill="var(--c-neg)" opacity=".9">
+            <rect x="150" y="52" width="11" height="11" rx="2"/><rect x="186" y="96" width="11" height="11" rx="2"/>
+            <rect x="140" y="142" width="11" height="11" rx="2"/><rect x="192" y="188" width="11" height="11" rx="2"/>
+            <rect x="158" y="206" width="11" height="11" rx="2"/><rect x="176" y="60" width="11" height="11" rx="2"/></g>
+          <text x="116" y="256" text-anchor="middle" font-size="12" fill="currentColor" opacity=".6">separadas, pero dispersas</text>
+          <rect x="258" y="26" width="212" height="212" rx="8" fill="var(--surface)" stroke="var(--green)" stroke-width="1.6"/>
+          <text x="364" y="18" text-anchor="middle" font-size="13" font-weight="600" fill="var(--green-ink)">entrenado para parecerse</text>
+          <circle cx="312" cy="90" r="42" fill="var(--c-pos)" opacity=".1"/>
+          <circle cx="414" cy="180" r="42" fill="var(--c-neg)" opacity=".12"/>
+          <g fill="var(--c-pos)" opacity=".9">
+            <circle cx="300" cy="78" r="6"/><circle cx="322" cy="86" r="6"/><circle cx="308" cy="104" r="6"/>
+            <circle cx="326" cy="106" r="6"/><circle cx="312" cy="66" r="6"/><circle cx="294" cy="98" r="6"/></g>
+          <g fill="var(--c-neg)">
+            <rect x="402" y="164" width="11" height="11" rx="2"/><rect x="422" y="172" width="11" height="11" rx="2"/>
+            <rect x="408" y="190" width="11" height="11" rx="2"/><rect x="426" y="192" width="11" height="11" rx="2"/>
+            <rect x="414" y="154" width="11" height="11" rx="2"/><rect x="396" y="182" width="11" height="11" rx="2"/></g>
+          <text x="364" y="256" text-anchor="middle" font-size="12" fill="currentColor" opacity=".6">compactas y lejos entre sí</text>
+          <g font-size="12.5" fill="currentColor">
+            <circle cx="150" cy="290" r="6" fill="var(--c-pos)"/><text x="164" y="295">clase A</text>
+            <rect x="240" y="284" width="11" height="11" rx="2" fill="var(--c-neg)"/><text x="258" y="295">clase B</text>
+          </g>
+          <text x="240" y="336" text-anchor="middle" font-size="13" fill="currentColor" opacity=".72">Clasificar solo pide una frontera.</text>
+          <text x="240" y="358" text-anchor="middle" font-size="13" fill="currentColor" opacity=".72">Medir parecido pide geometría.</text>
+        </svg>
+      </figure>
+    </div>
+  </div>
+  <div class="notes">El punto de la lámina: clasificar y medir parecido no son el mismo objetivo. Un modelo puede clasificar perfecto y tener un espacio inservible para comparar.</div>
+</section>
+
+<!-- ============ RECAP 3 ============ -->
+<section class="slide" data-sec="Sesión 1 · Recap de redes" data-title="Vocabulario que vamos a usar">
+  <div class="head">
+    <p class="eyebrow">Recap · 3 de 3</p>
+    <h2>Vocabulario que vamos a usar toda la sesión</h2>
+  </div>
+  <div class="fill">
+    <table>
+      <thead><tr><th style="width:19%">Término</th><th style="width:44%">Qué es</th><th>Por qué nos importa</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Backbone</td><td>La red convolucional o transformer que convierte la imagen en un vector.</td><td>Es lo que se reusa. Casi nunca se entrena desde cero.</td></tr>
+        <tr><td class="k">Head</td><td>Las capas que van después del backbone.</td><td>Aquí decides qué significa la salida. Cambiarlo cambia el problema.</td></tr>
+        <tr><td class="k">Embedding</td><td>El vector final, normalizado, que representa a la imagen.</td><td>Es el producto. Lo que guardas, indexas y comparas.</td></tr>
+        <tr><td class="k">Identidad</td><td>La cosa concreta que quieres reconocer: una persona, un producto, una especie.</td><td>No es lo mismo que “clase”. Esta distinción es media sesión.</td></tr>
+        <tr><td class="k">Fine-tuning</td><td>Seguir entrenando un backbone preentrenado con tus datos.</td><td>El camino normal. Congelas capas bajas, entrenas las altas.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="notes">Ojo con <b>identidad</b>. Es el término que va a hacer clic en la sesión 2 cuando hablemos del split. Vale la pena decirlo dos veces.</div>
+</section>
+
+<!-- ============ PROBLEMA 1 ============ -->
+<section class="slide" data-sec="Sesión 1 · El problema" data-title="Closed-set vs. open-set">
+  <div class="head">
+    <p class="eyebrow">El problema · 1 de 3</p>
+    <h2>Mañana llega una clase que no existía</h2>
+  </div>
+  <div class="fill">
+    <figure>
+      <svg viewBox="0 0 1080 300" role="img" aria-label="Comparación entre un clasificador de conjunto cerrado, que necesita reentrenarse cuando aparece una clase nueva, y un modelo de embeddings, en el que basta agregar un vector al catálogo.">
+        <defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+          <marker id="ar2n" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--c-5)"/></marker>
+          <marker id="ar2p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--green)"/></marker></defs>
+
+        <text x="20" y="20" font-size="14" font-weight="600" fill="var(--c-5)">Clasificador · closed-set</text>
+        <rect x="20" y="34" width="500" height="118" rx="9" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.4"/>
+        <rect x="44" y="66" width="72" height="56" rx="5" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.2"/>
+        <text x="80" y="99" text-anchor="middle" font-size="12" fill="currentColor">imagen</text>
+        <line x1="122" y1="94" x2="152" y2="94" stroke="currentColor" stroke-width="1.5" opacity=".55" marker-end="url(#ar2)"/>
+        <rect x="158" y="60" width="96" height="68" rx="6" fill="var(--green-tint)" stroke="var(--green)" stroke-width="1.5"/>
+        <text x="206" y="98" text-anchor="middle" font-size="13" font-weight="600" fill="var(--green-ink)">backbone</text>
+        <line x1="260" y1="94" x2="290" y2="94" stroke="currentColor" stroke-width="1.5" opacity=".55" marker-end="url(#ar2)"/>
+        <rect x="296" y="60" width="86" height="68" rx="6" fill="var(--c-neg-soft)" stroke="var(--c-5)" stroke-width="1.5"/>
+        <text x="339" y="90" text-anchor="middle" font-size="13" font-weight="600" fill="var(--c-5)">FC</text>
+        <text x="339" y="108" text-anchor="middle" font-size="11.5" fill="var(--c-5)">→ 3 salidas</text>
+        <line x1="388" y1="94" x2="418" y2="94" stroke="currentColor" stroke-width="1.5" opacity=".55" marker-end="url(#ar2)"/>
+        <g font-size="12.5" fill="currentColor" opacity=".8">
+          <text x="426" y="78">gato</text><text x="426" y="98">perro</text><text x="426" y="118">ave</text></g>
+        <g stroke="var(--c-5)" stroke-width="2" fill="none">
+          <path d="M 344 176 L 344 200" marker-end="url(#ar2n)"/></g>
+        <rect x="20" y="206" width="500" height="66" rx="9" fill="var(--c-neg-soft)" stroke="var(--c-5)" stroke-width="1.5" stroke-dasharray="6 4"/>
+        <text x="270" y="232" text-anchor="middle" font-size="14" font-weight="600" fill="var(--c-5)">Llega “pez”: la FC tiene 3 salidas, no 4</text>
+        <text x="270" y="254" text-anchor="middle" font-size="13" fill="var(--c-5)" opacity=".9">Cambias la arquitectura y reentrenas todo. Otra vez.</text>
+        <text x="344" y="192" text-anchor="middle" font-size="12" fill="var(--c-5)"> </text>
+
+        <line x1="546" y1="30" x2="546" y2="278" stroke="currentColor" stroke-width="1" opacity=".22"/>
+
+        <text x="574" y="20" font-size="14" font-weight="600" fill="var(--green-ink)">Embeddings · open-set</text>
+        <rect x="574" y="34" width="486" height="118" rx="9" fill="var(--surface)" stroke="var(--green)" stroke-width="1.4"/>
+        <rect x="598" y="66" width="72" height="56" rx="5" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.2"/>
+        <text x="634" y="99" text-anchor="middle" font-size="12" fill="currentColor">imagen</text>
+        <line x1="676" y1="94" x2="706" y2="94" stroke="currentColor" stroke-width="1.5" opacity=".55" marker-end="url(#ar2)"/>
+        <rect x="712" y="60" width="96" height="68" rx="6" fill="var(--green-tint)" stroke="var(--green)" stroke-width="1.5"/>
+        <text x="760" y="98" text-anchor="middle" font-size="13" font-weight="600" fill="var(--green-ink)">backbone</text>
+        <line x1="814" y1="94" x2="844" y2="94" stroke="currentColor" stroke-width="1.5" opacity=".55" marker-end="url(#ar2)"/>
+        <g fill="var(--c-pos)" opacity=".9">
+          <rect x="850" y="64" width="30" height="10" rx="2"/><rect x="850" y="78" width="30" height="10" rx="2"/>
+          <rect x="850" y="92" width="30" height="10" rx="2"/><rect x="850" y="106" width="30" height="10" rx="2"/></g>
+        <text x="865" y="136" text-anchor="middle" font-size="11.5" fill="var(--c-pos)" font-weight="600">embedding</text>
+        <line x1="890" y1="94" x2="920" y2="94" stroke="currentColor" stroke-width="1.5" opacity=".55" marker-end="url(#ar2)"/>
+        <rect x="926" y="56" width="112" height="76" rx="6" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.3"/>
+        <text x="982" y="82" text-anchor="middle" font-size="12.5" fill="currentColor">catálogo</text>
+        <text x="982" y="101" text-anchor="middle" font-size="11.5" fill="currentColor" opacity=".65">coseno vs.</text>
+        <text x="982" y="117" text-anchor="middle" font-size="11.5" fill="currentColor" opacity=".65">cada vector</text>
+        <path d="M 982 176 L 982 200" stroke="var(--green)" stroke-width="2" fill="none" marker-end="url(#ar2p)"/>
+        <rect x="574" y="206" width="486" height="66" rx="9" fill="var(--green-tint)" stroke="var(--green)" stroke-width="1.5"/>
+        <text x="817" y="232" text-anchor="middle" font-size="14" font-weight="600" fill="var(--green-ink)">Llega “pez”: agregas su vector al catálogo</text>
+        <text x="817" y="254" text-anchor="middle" font-size="13" fill="var(--green-ink)" opacity=".9">El modelo no se toca. Ni una época de entrenamiento.</text>
+      </svg>
+      <figcaption>La diferencia no es la precisión: es qué tienes que hacer cuando el mundo cambia. Un clasificador fija las clases en su arquitectura; un modelo de embeddings las deja fuera, en una tabla de vectores.</figcaption>
+    </figure>
+  </div>
+  <div class="notes"><b>La lámina bisagra de la sesión.</b> Si se llevan una sola idea, es ésta. Pregunta al grupo antes de avanzar: ¿dónde han visto un problema donde las clases crecen?</div>
+</section>
+
+<!-- ============ PROBLEMA 2 ============ -->
+<section class="slide" data-sec="Sesión 1 · El problema" data-title="Dónde aparece esto">
+  <div class="head">
+    <p class="eyebrow">El problema · 2 de 3</p>
+    <h2>Dónde aparece esto en la vida real</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c3" style="gap:20px">
+      <div class="card"><h3>Reconocimiento facial</h3><p class="small" style="color:var(--ink-soft)">Cada empleado nuevo es una clase nueva. Nadie reentrena la red por una contratación: se guarda un vector.</p></div>
+      <div class="card"><h3>Búsqueda por imagen</h3><p class="small" style="color:var(--ink-soft)">“Encuéntrame productos parecidos a esta foto.” El catálogo cambia todos los días.</p></div>
+      <div class="card"><h3>Re-identificación</h3><p class="small" style="color:var(--ink-soft)">Seguir a la misma persona o al mismo coche entre cámaras que no se traslapan.</p></div>
+      <div class="card"><h3>Deduplicación</h3><p class="small" style="color:var(--ink-soft)">Detectar que dos registros son la misma foto reencodeada, recortada o con marca de agua.</p></div>
+      <div class="card"><h3>Verificación</h3><p class="small" style="color:var(--ink-soft)">“¿Esta firma es de esta persona?” Una pregunta de sí o no sobre un par, sin catálogo.</p></div>
+      <div class="card"><h3>Pocos ejemplos por clase</h3><p class="small" style="color:var(--ink-soft)">Cuando tienes 3 fotos de cada especie, un clasificador no aprende. Comparar sí funciona.</p></div>
+    </div>
+    <p class="body" style="margin:26px auto 0;text-align:center">El patrón común: <strong>muchas clases, pocos ejemplos de cada una, y la lista crece sin avisar.</strong></p>
+  </div>
+</section>
+
+<!-- ============ PROBLEMA 3 ============ -->
+<section class="slide" data-sec="Sesión 1 · El problema" data-title="Cuándo NO usar embeddings">
+  <div class="head">
+    <p class="eyebrow">El problema · 3 de 3</p>
+    <h2>El lado incómodo</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2">
+      <div class="card">
+        <span class="tag pos">A favor</span>
+        <ul class="ticks pro" style="margin-top:14px">
+          <li>Agregar una clase cuesta <strong>una inferencia</strong>, no un reentrenamiento.</li>
+          <li>Funciona con 1–5 ejemplos por identidad.</li>
+          <li>Un solo modelo sirve para buscar, verificar, agrupar y deduplicar.</li>
+          <li>El catálogo es una tabla: auditable, editable, borrable.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag neg">En contra</span>
+        <ul class="ticks con" style="margin-top:14px">
+          <li>Hay que <strong>elegir un umbral</strong>, y ese umbral es una decisión de negocio, no de ingeniería.</li>
+          <li>Entrenar es más delicado: la pérdida y el muestreo importan más que la arquitectura.</li>
+          <li>Evaluar es más caro: necesitas pares o un protocolo de galería, no un simple accuracy.</li>
+          <li>En inferencia necesitas <strong>infraestructura de búsqueda</strong>, no solo el modelo.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card flat" style="margin-top:22px">
+      <p class="body" style="max-width:none"><strong>Si tus clases son fijas y tienes miles de ejemplos de cada una, usa un clasificador.</strong> Es más simple, más rápido de evaluar y más fácil de explicar. Los embeddings resuelven un problema que no todos tienen.</p>
+    </div>
+  </div>
+  <div class="notes">Importante decir esto en voz alta: no queremos que salgan usando embeddings para todo. La pregunta correcta es si la lista de clases está cerrada.</div>
+</section>
+
+<!-- ============ ARQUITECTURA 1 ============ -->
+<section class="slide" data-sec="Sesión 1 · Arquitectura" data-title="Backbone + head → embedding">
+  <div class="head">
+    <p class="eyebrow">Arquitectura · 1 de 4</p>
+    <h2>El head de entrenamiento se tira a la basura</h2>
+  </div>
+  <div class="fill">
+    <figure>
+      <svg viewBox="0 0 1100 320" role="img" aria-label="En entrenamiento el modelo pasa por backbone, head de embedding, normalización y un head de clasificación con margen. En inferencia el head de clasificación se descarta y la salida es el embedding normalizado.">
+        <defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+
+        <text x="16" y="18" font-size="13.5" font-weight="600" fill="currentColor" opacity=".75">ENTRENAMIENTO</text>
+        <rect x="16" y="32" width="1068" height="112" rx="10" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.4"/>
+        <g fill="none" stroke="currentColor" stroke-width="1.5" opacity=".5" marker-end="url(#ar3)">
+          <line x1="132" y1="88" x2="168" y2="88"/><line x1="300" y1="88" x2="336" y2="88"/>
+          <line x1="468" y1="88" x2="504" y2="88"/><line x1="636" y1="88" x2="672" y2="88"/>
+          <line x1="828" y1="88" x2="864" y2="88"/></g>
+        <rect x="40" y="60" width="92" height="56" rx="5" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.2"/>
+        <text x="86" y="93" text-anchor="middle" font-size="12.5" fill="currentColor">imagen</text>
+        <rect x="168" y="54" width="132" height="68" rx="7" fill="var(--green-tint)" stroke="var(--green)" stroke-width="1.6"/>
+        <text x="234" y="84" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--green-ink)">backbone</text>
+        <text x="234" y="103" text-anchor="middle" font-size="11.5" fill="var(--green-ink)" opacity=".8">preentrenado</text>
+        <rect x="336" y="54" width="132" height="68" rx="7" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.6"/>
+        <text x="402" y="84" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--c-pos)">head</text>
+        <text x="402" y="103" text-anchor="middle" font-size="11.5" fill="var(--c-pos)" opacity=".85">→ 128 dims</text>
+        <rect x="504" y="54" width="132" height="68" rx="7" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.4"/>
+        <text x="570" y="84" text-anchor="middle" font-size="13.5" fill="currentColor">L2-norm</text>
+        <text x="570" y="103" text-anchor="middle" font-size="11.5" fill="currentColor" opacity=".65">‖z‖ = 1</text>
+        <rect x="672" y="54" width="156" height="68" rx="7" fill="var(--c-neg-soft)" stroke="var(--c-5)" stroke-width="1.6" stroke-dasharray="6 4"/>
+        <text x="750" y="84" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--c-5)">ArcFace</text>
+        <text x="750" y="103" text-anchor="middle" font-size="11.5" fill="var(--c-5)" opacity=".9">N clases de train</text>
+        <rect x="864" y="60" width="96" height="56" rx="5" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.2"/>
+        <text x="912" y="93" text-anchor="middle" font-size="12.5" fill="currentColor">loss</text>
+
+        <path d="M 750 156 L 750 190" stroke="var(--c-5)" stroke-width="2" stroke-dasharray="5 4" fill="none"/>
+        <text x="766" y="178" font-size="13" font-weight="600" fill="var(--c-5)">se descarta al terminar</text>
+        <path d="M 570 156 L 570 190" stroke="var(--green)" stroke-width="2.4" fill="none" marker-end="url(#ar3)" opacity=".9"/>
+        <text x="452" y="178" text-anchor="end" font-size="13" font-weight="600" fill="var(--green-ink)">esto es lo que te llevas</text>
+
+        <text x="16" y="212" font-size="13.5" font-weight="600" fill="currentColor" opacity=".75">INFERENCIA</text>
+        <rect x="16" y="226" width="1068" height="82" rx="10" fill="var(--green-tint)" stroke="var(--green)" stroke-width="1.5"/>
+        <g fill="none" stroke="var(--green)" stroke-width="1.5" opacity=".65" marker-end="url(#ar3)">
+          <line x1="132" y1="267" x2="168" y2="267"/><line x1="300" y1="267" x2="336" y2="267"/>
+          <line x1="468" y1="267" x2="504" y2="267"/><line x1="636" y1="267" x2="700" y2="267"/></g>
+        <rect x="40" y="245" width="92" height="44" rx="5" fill="var(--surface)" stroke="var(--green)" stroke-width="1.2"/>
+        <text x="86" y="272" text-anchor="middle" font-size="12.5" fill="currentColor">imagen</text>
+        <rect x="168" y="245" width="132" height="44" rx="6" fill="var(--surface)" stroke="var(--green)" stroke-width="1.4"/>
+        <text x="234" y="272" text-anchor="middle" font-size="13" font-weight="600" fill="var(--green-ink)">backbone</text>
+        <rect x="336" y="245" width="132" height="44" rx="6" fill="var(--surface)" stroke="var(--green)" stroke-width="1.4"/>
+        <text x="402" y="272" text-anchor="middle" font-size="13" font-weight="600" fill="var(--green-ink)">head</text>
+        <rect x="504" y="245" width="132" height="44" rx="6" fill="var(--surface)" stroke="var(--green)" stroke-width="1.4"/>
+        <text x="570" y="272" text-anchor="middle" font-size="13" fill="var(--green-ink)">L2-norm</text>
+        <g fill="var(--c-pos)"><rect x="706" y="250" width="26" height="9" rx="2"/><rect x="706" y="263" width="26" height="9" rx="2"/><rect x="706" y="276" width="26" height="9" rx="2"/></g>
+        <text x="748" y="272" font-size="13.5" font-weight="600" fill="var(--c-pos)">z ∈ ℝ¹²⁸,  ‖z‖ = 1</text>
+      </svg>
+      <figcaption>El head de ArcFace existe solo para generar gradiente. Terminado el entrenamiento se borra, y con él desaparece cualquier dependencia del número de clases con las que entrenaste.</figcaption>
+    </figure>
+  </div>
+  <div class="notes">Este es el momento de conectar con la lámina del closed-set: por eso agregar una clase no cuesta nada. Las clases vivían en el pedazo que tiramos.</div>
+</section>
+
+<!-- ============ ARQUITECTURA 2 ============ -->
+<section class="slide" data-sec="Sesión 1 · Arquitectura" data-title="La hiperesfera">
+  <div class="head">
+    <p class="eyebrow">Arquitectura · 2 de 4</p>
+    <h2>Normalizar tira la magnitud y deja la dirección</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2-38" style="align-items:center">
+      <div class="vlist">
+        <div class="formula">z = f(x) / ‖f(x)‖₂</div>
+        <p class="body">Después de esto todos los embeddings viven en la <strong>esfera unitaria</strong>. Solo queda su dirección.</p>
+        <ul class="ticks">
+          <li>El brillo, el contraste o el tamaño del objeto inflan la magnitud del vector. No dicen nada sobre <em>quién</em> es.</li>
+          <li>Con norma 1, la única forma de que dos vectores se parezcan es apuntar hacia el mismo lado.</li>
+          <li>Fija el rango: el coseno queda siempre en <code>[-1, 1]</code>, y un umbral significa lo mismo en todo el espacio.</li>
+        </ul>
+      </div>
+      <figure>
+        <svg viewBox="0 0 420 400" role="img" aria-label="Vectores de distintas magnitudes proyectados sobre la esfera unitaria: al normalizar solo conservan su dirección y el parecido se vuelve un ángulo.">
+          <ellipse cx="210" cy="200" rx="150" ry="150" fill="var(--green-tint)" opacity=".45"/>
+          <circle cx="210" cy="200" r="150" fill="none" stroke="var(--green)" stroke-width="1.8"/>
+          <ellipse cx="210" cy="200" rx="150" ry="46" fill="none" stroke="var(--green)" stroke-width="1" opacity=".45" stroke-dasharray="5 5"/>
+          <ellipse cx="210" cy="200" rx="46" ry="150" fill="none" stroke="var(--green)" stroke-width="1" opacity=".45" stroke-dasharray="5 5"/>
+          <g stroke="currentColor" stroke-width="1.4" opacity=".38" stroke-dasharray="4 4">
+            <line x1="210" y1="200" x2="330" y2="110"/><line x1="210" y1="200" x2="288" y2="86"/>
+            <line x1="210" y1="200" x2="122" y2="322"/></g>
+          <g stroke="var(--c-pos)" stroke-width="3" stroke-linecap="round">
+            <line x1="210" y1="200" x2="300" y2="132"/><line x1="210" y1="200" x2="264" y2="124"/></g>
+          <g stroke="var(--c-neg)" stroke-width="3" stroke-linecap="round">
+            <line x1="210" y1="200" x2="147" y2="288"/></g>
+          <circle cx="300" cy="132" r="7" fill="var(--c-pos)"/><circle cx="264" cy="124" r="7" fill="var(--c-pos)"/>
+          <circle cx="147" cy="288" r="7" fill="var(--c-neg)"/>
+          <circle cx="330" cy="110" r="4.5" fill="currentColor" opacity=".3"/>
+          <circle cx="288" cy="86" r="4.5" fill="currentColor" opacity=".3"/>
+          <circle cx="122" cy="322" r="4.5" fill="currentColor" opacity=".3"/>
+          <path d="M 253 168 A 60 60 0 0 1 276 152" fill="none" stroke="var(--ink)" stroke-width="2"/>
+          <text x="277" y="182" font-size="17" font-weight="600" fill="currentColor">θ</text>
+          <circle cx="210" cy="200" r="4" fill="currentColor"/>
+          <text x="210" y="380" text-anchor="middle" font-size="13.5" fill="currentColor" opacity=".7">antes: puntos sueltos · después: puntos en la esfera</text>
+          <text x="210" y="358" text-anchor="middle" font-size="13.5" fill="var(--green-ink)" font-weight="600">‖z‖ = 1</text>
+        </svg>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ARQUITECTURA 3 ============ -->
+<section class="slide" data-sec="Sesión 1 · Arquitectura" data-title="Coseno y euclidiana son lo mismo">
+  <div class="head">
+    <p class="eyebrow">Arquitectura · 3 de 4</p>
+    <h2>Sobre la esfera, coseno y euclidiana son la misma cosa</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2" style="align-items:center">
+      <div class="vlist">
+        <div class="formula">sim(a, b) = a · b<br><span style="color:var(--ink-faint);font-size:15px">porque ‖a‖ = ‖b‖ = 1, el coseno es solo el producto punto</span></div>
+        <div class="formula" style="border-left-color:var(--c-pos)">‖a − b‖² = 2 − 2 (a · b)</div>
+        <p class="body">Ordenar por distancia euclidiana y ordenar por coseno dan <strong>exactamente el mismo ranking</strong>. La elección es de conveniencia numérica, no de modelo.</p>
+        <div class="card flat">
+          <p class="small" style="color:var(--ink-soft)"><strong>La trampa:</strong> esto solo vale si normalizaste. Si se te olvida el L2-norm, coseno y euclidiana empiezan a diferir y las dos empiezan a medir brillo.</p>
+        </div>
+      </div>
+      <figure>
+        <svg viewBox="0 0 560 320" role="img" aria-label="Sobre el círculo unitario, la cuerda entre dos vectores crece de forma monótona con el ángulo entre ellos, por lo que ordenar por distancia euclidiana equivale a ordenar por coseno.">
+          <circle cx="140" cy="158" r="108" fill="none" stroke="var(--green)" stroke-width="1.6" opacity=".8"/>
+          <line x1="140" y1="158" x2="235" y2="107" stroke="var(--c-pos)" stroke-width="3" stroke-linecap="round"/>
+          <line x1="140" y1="158" x2="187" y2="61" stroke="var(--c-pos)" stroke-width="3" stroke-linecap="round"/>
+          <line x1="235" y1="107" x2="187" y2="61" stroke="var(--c-5)" stroke-width="2.6" stroke-dasharray="6 4"/>
+          <circle cx="235" cy="107" r="6.5" fill="var(--c-pos)"/>
+          <circle cx="187" cy="61" r="6.5" fill="var(--c-pos)"/>
+          <text x="249" y="112" font-size="14" font-weight="600" fill="var(--c-pos)">a</text>
+          <text x="191" y="49" font-size="14" font-weight="600" fill="var(--c-pos)">b</text>
+          <text x="227" y="80" font-size="12.5" font-weight="600" fill="var(--c-5)">‖a−b‖</text>
+          <path d="M 195,129 A 62 62 0 0 0 167,102" fill="none" stroke="currentColor" stroke-width="2"/>
+          <text x="212" y="140" font-size="15" font-weight="600" fill="currentColor">θ</text>
+          <circle cx="140" cy="158" r="4" fill="currentColor"/>
+          <text x="140" y="298" text-anchor="middle" font-size="13" fill="currentColor" opacity=".72">más ángulo ⇒ más cuerda</text>
+          <g stroke="currentColor" stroke-width="1.3" opacity=".45">
+            <line x1="344" y1="262" x2="536" y2="262"/><line x1="344" y1="262" x2="344" y2="88"/></g>
+          <path d="M 344,262 L 349,255 L 353,249 L 358,242 L 362,236 L 367,230 L 372,223 L 376,217 L 381,211 L 385,205 L 390,198 L 395,193 L 399,187 L 404,181 L 408,175 L 413,170 L 418,164 L 422,159 L 427,154 L 431,149 L 436,145 L 441,140 L 445,136 L 450,132 L 454,128 L 459,124 L 464,120 L 468,117 L 473,114 L 477,111 L 482,109 L 487,106 L 491,104 L 496,102 L 500,101 L 505,99 L 510,98 L 514,97 L 519,97 L 523,96 L 528,96" fill="none" stroke="var(--c-5)" stroke-width="2.6"/>
+          <g font-size="11.5" fill="currentColor" opacity=".62">
+            <text x="344" y="280" text-anchor="middle">0</text>
+            <text x="528" y="280" text-anchor="middle">π</text>
+            <text x="436" y="298" text-anchor="middle">ángulo θ</text>
+            <text x="336" y="266" text-anchor="end">0</text>
+            <text x="336" y="100" text-anchor="end">2</text></g>
+          <text x="524" y="82" text-anchor="end" font-size="12" font-weight="600" fill="var(--c-5)">‖a−b‖ es monótona en θ</text>
+        </svg>
+      </figure>
+    </div>
+  </div>
+  <div class="notes">Vale la pena hacer el álgebra en el pizarrón si hay tiempo: ‖a−b‖² = ‖a‖² + ‖b‖² − 2a·b = 2 − 2a·b. Son dos líneas y les cierra el círculo.</div>
+</section>
+
+<!-- ============ ARQUITECTURA 4 ============ -->
+<section class="slide" data-sec="Sesión 1 · Arquitectura" data-title="Dimensión del embedding">
+  <div class="head">
+    <p class="eyebrow">Arquitectura · 4 de 4</p>
+    <h2>¿De qué tamaño hago el vector?</h2>
+  </div>
+  <div class="fill">
+    <table>
+      <thead><tr><th style="width:14%">Dimensión</th><th style="width:30%">Dónde se usa</th><th>Qué esperar</th></tr></thead>
+      <tbody>
+        <tr><td class="k num-col">64 – 128</td><td>Datasets chicos, pocas identidades, todo en CPU.</td><td>Suficiente para cientos de identidades. Índice ligero, entrenamiento estable. <em>Empieza aquí.</em></td></tr>
+        <tr><td class="k num-col">256 – 512</td><td>El estándar en reconocimiento facial y re-id.</td><td>El punto dulce cuando hay miles de identidades y datos para sostenerlas.</td></tr>
+        <tr><td class="k num-col">768 – 1024</td><td>Modelos fundacionales: CLIP, DINOv2.</td><td>Solo vale la pena con muchísimos datos. Índice caro, memoria cara.</td></tr>
+      </tbody>
+    </table>
+    <div class="cols c2" style="margin-top:24px">
+      <div class="card flat">
+        <h3>Más dimensiones no es más calidad</h3>
+        <p class="small" style="color:var(--ink-soft)">Con pocos datos, subir la dimensión sobreajusta y el recall <strong>baja</strong>. Es una de las ablaciones más baratas que pueden correr y casi siempre sorprende.</p>
+      </div>
+      <div class="card flat">
+        <h3>El costo es lineal en todo</h3>
+        <p class="small" style="color:var(--ink-soft)">Duplicar la dimensión duplica la memoria del índice y el tiempo de cada comparación. En un catálogo de millones, eso es dinero real.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RECESO ============ -->
+<section class="slide pausa" data-sec="Sesión 1" data-title="Receso" data-nonum>
+  <div class="inner">
+    <p class="eyebrow" style="color:var(--green-ink)">A la mitad</p>
+    <h1>Receso</h1>
+    <p class="lede" style="text-align:center;margin-top:8px">5 minutos. Al volver: cómo se entrena esto.</p>
+  </div>
+</section>
+
+<!-- ============ LOSS 1 ============ -->
+<section class="slide" data-sec="Sesión 1 · Funciones de pérdida" data-title="Qué le pedimos a la pérdida">
+  <div class="head">
+    <p class="eyebrow">Pérdidas · 1 de 6</p>
+    <h2>Todo se reduce a dos fuerzas</h2>
+  </div>
+  <div class="fill">
+    <figure>
+      <svg viewBox="0 0 980 300" role="img" aria-label="Dos fuerzas sobre el espacio de embeddings: una atrae los puntos de la misma identidad y otra empuja los de identidades distintas, hasta formar cúmulos separados sobre la esfera.">
+        <defs><marker id="arA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--c-pos)"/></marker>
+          <marker id="arB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--c-neg)"/></marker>
+          <marker id="arC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--green)"/></marker></defs>
+
+        <circle cx="180" cy="150" r="126" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".3"/>
+        <text x="180" y="14" text-anchor="middle" font-size="13.5" font-weight="600" fill="currentColor" opacity=".75">al empezar</text>
+        <g fill="var(--c-pos)" opacity=".9">
+          <circle cx="120" cy="90" r="7"/><circle cx="232" cy="118" r="7"/><circle cx="146" cy="212" r="7"/><circle cx="238" cy="196" r="7"/></g>
+        <g fill="var(--c-neg)">
+          <rect x="176" y="66" width="13" height="13" rx="2"/><rect x="96" y="152" width="13" height="13" rx="2"/>
+          <rect x="204" y="240" width="13" height="13" rx="2"/><rect x="256" y="150" width="13" height="13" rx="2"/></g>
+        <g stroke="var(--c-pos)" stroke-width="1.8" marker-end="url(#arA)" opacity=".8">
+          <line x1="132" y1="100" x2="164" y2="126"/><line x1="222" y1="126" x2="192" y2="140"/>
+          <line x1="154" y1="202" x2="172" y2="176"/><line x1="230" y1="188" x2="200" y2="166"/></g>
+        <text x="180" y="290" text-anchor="middle" font-size="12.5" fill="var(--c-pos)" font-weight="600">atrae: misma identidad</text>
+
+        <path d="M 336 150 L 400 150" stroke="var(--green)" stroke-width="2.6" fill="none" marker-end="url(#arC)"/>
+        <text x="368" y="138" text-anchor="middle" font-size="12" fill="var(--green-ink)" font-weight="600">entrenar</text>
+
+        <circle cx="560" cy="150" r="126" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".3"/>
+        <text x="560" y="14" text-anchor="middle" font-size="13.5" font-weight="600" fill="currentColor" opacity=".75">a la mitad</text>
+        <g fill="var(--c-pos)" opacity=".9">
+          <circle cx="512" cy="104" r="7"/><circle cx="556" cy="120" r="7"/><circle cx="520" cy="152" r="7"/><circle cx="574" cy="160" r="7"/></g>
+        <g fill="var(--c-neg)">
+          <rect x="596" y="122" width="13" height="13" rx="2"/><rect x="560" y="196" width="13" height="13" rx="2"/>
+          <rect x="614" y="182" width="13" height="13" rx="2"/><rect x="524" y="212" width="13" height="13" rx="2"/></g>
+        <g stroke="var(--c-neg)" stroke-width="1.8" marker-end="url(#arB)" opacity=".9">
+          <line x1="588" y1="140" x2="620" y2="112"/><line x1="562" y1="188" x2="548" y2="222"/></g>
+        <text x="560" y="290" text-anchor="middle" font-size="12.5" fill="var(--c-neg)" font-weight="600">empuja: identidades distintas</text>
+
+        <path d="M 716 150 L 780 150" stroke="var(--green)" stroke-width="2.6" fill="none" marker-end="url(#arC)"/>
+
+        <circle cx="880" cy="150" r="98" fill="none" stroke="var(--green)" stroke-width="1.6"/>
+        <text x="880" y="14" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--green-ink)">al terminar</text>
+        <circle cx="838" cy="102" r="32" fill="var(--c-pos)" opacity=".13"/>
+        <circle cx="918" cy="198" r="32" fill="var(--c-neg)" opacity=".16"/>
+        <g fill="var(--c-pos)"><circle cx="828" cy="94" r="6.5"/><circle cx="848" cy="98" r="6.5"/><circle cx="834" cy="114" r="6.5"/><circle cx="852" cy="116" r="6.5"/></g>
+        <g fill="var(--c-neg)"><rect x="904" y="184" width="12" height="12" rx="2"/><rect x="922" y="188" width="12" height="12" rx="2"/>
+          <rect x="910" y="204" width="12" height="12" rx="2"/><rect x="928" y="206" width="12" height="12" rx="2"/></g>
+        <line x1="806" y1="216" x2="954" y2="86" stroke="var(--ink)" stroke-width="1.8" stroke-dasharray="6 4" opacity=".55"/>
+        <text x="880" y="290" text-anchor="middle" font-size="12.5" fill="var(--green-ink)" font-weight="600">cúmulos compactos y separados</text>
+      </svg>
+      <figcaption>Toda función de pérdida de este curso implementa las mismas dos fuerzas. Lo que cambia entre ellas es a qué pares se las aplica y con cuánta energía.</figcaption>
+    </figure>
+  </div>
+  <div class="notes"><b>40 min para este bloque.</b> Ancla conceptual: si entienden estas dos fuerzas, contrastive, triplet y ArcFace son variaciones de lo mismo.</div>
+</section>
+
+<!-- ============ LOSS 2 ============ -->
+<section class="slide" data-sec="Sesión 1 · Funciones de pérdida" data-title="Contrastive y triplet">
+  <div class="head">
+    <p class="eyebrow">Pérdidas · 2 de 6</p>
+    <h2>La familia clásica: comparar pares y tercias</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2-62" style="align-items:center">
+      <figure>
+        <svg viewBox="0 0 560 300" role="img" aria-label="Pérdida de tripleta: el ancla se acerca al positivo y se aleja del negativo hasta que la diferencia de distancias supera el margen.">
+          <circle cx="150" cy="130" r="112" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".22" stroke-dasharray="4 5"/>
+          <line x1="150" y1="130" x2="106" y2="66" stroke="var(--c-pos)" stroke-width="2.6"/>
+          <line x1="150" y1="130" x2="254" y2="192" stroke="var(--c-neg)" stroke-width="2.6"/>
+          <circle cx="150" cy="130" r="11" fill="var(--ink)"/>
+          <circle cx="106" cy="66" r="10" fill="var(--c-pos)"/>
+          <rect x="245" y="183" width="19" height="19" rx="3" fill="var(--c-neg)"/>
+          <text x="150" y="160" text-anchor="middle" font-size="13.5" font-weight="600" fill="currentColor">ancla</text>
+          <text x="92" y="48" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--c-pos)">positivo</text>
+          <text x="284" y="212" font-size="13.5" font-weight="600" fill="var(--c-neg)">negativo</text>
+          <text x="104" y="106" text-anchor="end" font-size="12.5" fill="var(--c-pos)">d(a,p)</text>
+          <text x="216" y="152" font-size="12.5" fill="var(--c-neg)">d(a,n)</text>
+          <path d="M 68 250 L 68 268 M 68 259 L 224 259 M 224 250 L 224 268" stroke="var(--ink)" stroke-width="1.6" fill="none" opacity=".7"/>
+          <text x="146" y="288" text-anchor="middle" font-size="13" fill="currentColor" opacity=".75">margen m</text>
+          <text x="330" y="80" font-size="14" fill="currentColor" font-weight="600">se quiere:</text>
+          <text x="330" y="108" font-size="14.5" fill="currentColor" font-family="monospace">d(a,p) + m &lt; d(a,n)</text>
+          <text x="330" y="146" font-size="13.5" fill="currentColor" opacity=".7">si ya se cumple,</text>
+          <text x="330" y="166" font-size="13.5" fill="currentColor" opacity=".7">la pérdida es exactamente 0</text>
+          <text x="330" y="186" font-size="13.5" fill="var(--c-5)" font-weight="600">y no hay gradiente</text>
+        </svg>
+      </figure>
+      <div class="vlist">
+        <div class="card">
+          <h3>Contrastive</h3>
+          <p class="small" style="color:var(--ink-soft)">Trabaja con <strong>pares</strong>. Acerca los iguales hasta cero; aleja los distintos hasta un margen fijo. Simple, pero exige que todos los cúmulos tengan el mismo radio.</p>
+        </div>
+        <div class="card">
+          <h3>Triplet</h3>
+          <p class="small" style="color:var(--ink-soft)">Trabaja con <strong>tercias</strong>. No pide distancias absolutas, solo que el positivo esté más cerca que el negativo por un margen. Más flexible, y durante años fue el estándar.</p>
+        </div>
+        <div class="card flat">
+          <p class="small" style="color:var(--ink-soft)"><strong>El detalle que lo cambia todo:</strong> la pérdida es cero para cualquier tercia que ya cumple la condición. Y eso, en un dataset normal, es casi todas.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LOSS 3 ============ -->
+<section class="slide" data-sec="Sesión 1 · Funciones de pérdida" data-title="El problema del muestreo">
+  <div class="head">
+    <p class="eyebrow">Pérdidas · 3 de 6</p>
+    <h2>El 99% de las tercias no enseña nada</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2-62" style="align-items:center">
+      <figure>
+        <svg viewBox="0 0 580 300" role="img" aria-label="Zonas de tripletas alrededor del ancla: las fáciles quedan lejos y dan gradiente cero, las semiduras caen dentro del margen y son útiles, las duras están más cerca que el positivo y desestabilizan el entrenamiento.">
+          <circle cx="180" cy="150" r="62" fill="var(--c-pos)" opacity=".08"/>
+          <circle cx="180" cy="150" r="104" fill="var(--c-neg)" opacity=".1"/>
+          <circle cx="180" cy="150" r="62" fill="none" stroke="var(--c-pos)" stroke-width="1.6" stroke-dasharray="5 4"/>
+          <circle cx="180" cy="150" r="104" fill="none" stroke="var(--c-neg)" stroke-width="1.6" stroke-dasharray="5 4"/>
+          <circle cx="180" cy="150" r="140" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".25"/>
+          <circle cx="180" cy="150" r="10" fill="var(--ink)"/>
+          <text x="180" y="176" text-anchor="middle" font-size="12" fill="currentColor">ancla</text>
+          <circle cx="222" cy="112" r="8" fill="var(--c-pos)"/>
+          <text x="238" y="106" font-size="11.5" fill="var(--c-pos)" font-weight="600">pos</text>
+          <g fill="var(--c-5)"><rect x="152" y="108" width="13" height="13" rx="2"/><rect x="196" y="176" width="13" height="13" rx="2"/></g>
+          <g fill="var(--c-neg)"><rect x="118" y="98" width="13" height="13" rx="2"/><rect x="242" y="196" width="13" height="13" rx="2"/><rect x="98" y="188" width="13" height="13" rx="2"/></g>
+          <g fill="currentColor" opacity=".45"><rect x="70" y="60" width="13" height="13" rx="2"/><rect x="284" y="76" width="13" height="13" rx="2"/>
+            <rect x="292" y="238" width="13" height="13" rx="2"/><rect x="58" y="252" width="13" height="13" rx="2"/><rect x="300" y="150" width="13" height="13" rx="2"/></g>
+          <text x="180" y="26" text-anchor="middle" font-size="12.5" fill="currentColor" opacity=".55">fáciles · gradiente 0</text>
+        </svg>
+      </figure>
+      <div class="vlist">
+        <table>
+          <thead><tr><th style="width:30%">Tipo</th><th style="width:26%">Frecuencia</th><th>Qué hace</th></tr></thead>
+          <tbody>
+            <tr><td class="k" style="color:var(--ink-faint)">Fácil</td><td class="num-col">~99%</td><td>Ya cumple el margen. Pérdida 0, gradiente 0.</td></tr>
+            <tr><td class="k" style="color:var(--c-neg)">Semidura</td><td class="num-col">~1%</td><td>Cae dentro del margen. <em>Es la que quieres.</em></td></tr>
+            <tr><td class="k" style="color:var(--c-5)">Dura</td><td class="num-col">&lt;0.1%</td><td>Negativo más cerca que el positivo. A menudo es una etiqueta mal puesta y colapsa el entrenamiento.</td></tr>
+          </tbody>
+        </table>
+        <div class="card flat">
+          <p class="small" style="color:var(--ink-soft)">De ahí nace toda una industria: <strong>minería de negativos</strong>, batch-hard, semi-hard, muestreo PK, colas de memoria. Media década de literatura dedicada a resolver un problema que la pérdida se creó sola.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes">Aquí es donde justificamos por qué el ejercicio NO usa triplet. Es un problema de ingeniería de muestreo, no de aprendizaje, y hay una salida más limpia.</div>
+</section>
+
+<!-- ============ LOSS 4 ============ -->
+<section class="slide" data-sec="Sesión 1 · Funciones de pérdida" data-title="De comparar pares a clasificar con margen">
+  <div class="head">
+    <p class="eyebrow">Pérdidas · 4 de 6</p>
+    <h2>El giro: volver a clasificar, pero con margen</h2>
+  </div>
+  <div class="fill">
+    <div class="vlist" style="gap:18px">
+      <p class="body" style="max-width:none">En vez de armar tercias, volvemos al softmax de toda la vida y le hacemos <strong>tres modificaciones</strong>. Cada una quita un grado de libertad que no queríamos.</p>
+      <div class="cols c3" style="gap:18px">
+        <div class="card">
+          <span class="tag">1</span>
+          <h3 style="margin-top:12px">Quitar el sesgo</h3>
+          <div class="formula" style="font-size:15.5px;padding:10px 13px;margin:8px 0 10px">Wⱼᵀz + bⱼ  →  Wⱼᵀz</div>
+          <p class="small" style="color:var(--ink-soft)">El sesgo desplaza la frontera sin decir nada de la dirección. Fuera.</p>
+        </div>
+        <div class="card">
+          <span class="tag">2</span>
+          <h3 style="margin-top:12px">Normalizar todo</h3>
+          <div class="formula" style="font-size:15.5px;padding:10px 13px;margin:8px 0 10px">Wⱼᵀz  →  cos θⱼ</div>
+          <p class="small" style="color:var(--ink-soft)">Con ‖W<sub>j</sub>‖ = ‖z‖ = 1, el logit <em>es</em> el coseno. Cada columna de W se vuelve el centro de su clase sobre la esfera.</p>
+        </div>
+        <div class="card">
+          <span class="tag">3</span>
+          <h3 style="margin-top:12px">Meter un margen</h3>
+          <div class="formula" style="font-size:15.5px;padding:10px 13px;margin:8px 0 10px">cos θ<sub>y</sub>  →  cos(θ<sub>y</sub> + m)</div>
+          <p class="small" style="color:var(--ink-soft)">Le exigimos a la clase correcta que gane <strong>por un ángulo</strong>, no apenas.</p>
+        </div>
+      </div>
+      <div class="card flat">
+        <p class="body" style="max-width:none">Con eso, el logit ya no vive en un espacio arbitrario: <strong>es un ángulo sobre la esfera</strong>, exactamente la cantidad que vamos a usar en inferencia. Y como cada muestra se compara contra <em>todos</em> los centros de clase a la vez, no hay que elegir negativos: el softmax los recorre todos, gratis.</p>
+      </div>
+    </div>
+  </div>
+  <div class="notes">La frase que quiero que se lleven: <b>el softmax hace la minería por ti</b>. Cada paso compara contra todas las clases.</div>
+</section>
+
+<!-- ============ LOSS 5 ============ -->
+<section class="slide" data-sec="Sesión 1 · Funciones de pérdida" data-title="ArcFace: el margen angular">
+  <div class="head">
+    <p class="eyebrow">Pérdidas · 5 de 6</p>
+    <h2>ArcFace</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2" style="align-items:center">
+      <div class="vlist">
+        <div class="formula" style="font-size:16px;line-height:1.95">logit<sub>y</sub> = s · cos(θ<sub>y</sub> + m)<span style="color:var(--ink-faint);font-size:13.5px">   ← la clase correcta, con margen</span><br>logit<sub>j</sub> = s · cos θ<sub>j</sub><span style="color:var(--ink-faint);font-size:13.5px">        ← todas las demás, sin margen</span><br>L = cross_entropy(logits, y)</div>
+        <table>
+          <thead><tr><th style="width:22%">Parámetro</th><th style="width:20%">Típico</th><th>Qué controla</th></tr></thead>
+          <tbody>
+            <tr><td class="k">m</td><td class="num-col">0.3 – 0.5 rad</td><td>Qué tan lejos deben quedar los cúmulos. Subirlo endurece; pasarse impide converger.</td></tr>
+            <tr><td class="k">s</td><td class="num-col">16 – 64</td><td>Escala los logits. Sin él, un coseno acotado en [−1, 1] no da gradiente suficiente.</td></tr>
+          </tbody>
+        </table>
+        <div class="card flat">
+          <p class="small" style="color:var(--ink-soft)"><strong>CosFace</strong> es el mismo truco restando el margen al coseno, <code>cos θ − m</code>, en vez de sumándolo al ángulo. En la práctica van casi igual; ArcFace tiene la interpretación geométrica más limpia.</p>
+        </div>
+      </div>
+      <figure>
+        <svg viewBox="0 0 460 350" role="img" aria-label="Sobre el círculo unitario, la muestra z está a un ángulo theta uno del centro de su clase y theta dos del centro de la otra; el margen angular exige que theta uno más el margen siga siendo menor que theta dos.">
+          <circle cx="200" cy="192" r="138" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".28"/>
+          <line x1="200" y1="192" x2="322" y2="127" stroke="currentColor" stroke-width="1.4" stroke-dasharray="5 5" opacity=".45"/>
+          <text x="330" y="131" font-size="11.5" fill="currentColor" opacity=".55">frontera</text>
+          <line x1="200" y1="192" x2="224" y2="56" stroke="var(--c-pos)" stroke-width="3"/>
+          <circle cx="224" cy="56" r="8" fill="var(--c-pos)"/>
+          <text x="224" y="40" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--c-pos)">W₁</text>
+          <line x1="200" y1="192" x2="326" y2="248" stroke="var(--c-neg)" stroke-width="3"/>
+          <rect x="318" y="240" width="16" height="16" rx="3" fill="var(--c-neg)"/>
+          <text x="342" y="264" font-size="13.5" font-weight="600" fill="var(--c-neg)">W₂</text>
+          <line x1="200" y1="192" x2="296" y2="93" stroke="var(--ink)" stroke-width="2.6"/>
+          <circle cx="296" cy="93" r="8" fill="var(--ink)"/>
+          <text x="310" y="87" font-size="13.5" font-weight="600" fill="currentColor">z</text>
+          <path d="M 251,139 A 74 74 0 0 0 213,119" fill="none" stroke="var(--c-pos)" stroke-width="2.2"/>
+          <text x="238" y="108" font-size="14" font-weight="600" fill="var(--c-pos)">θ₁</text>
+          <path d="M 248,213 A 52 52 0 0 0 236,155" fill="none" stroke="var(--c-neg)" stroke-width="2.2"/>
+          <text x="262" y="214" font-size="14" font-weight="600" fill="var(--c-neg)">θ₂</text>
+          <path d="M 269,120 A 100 100 0 0 0 241,101" fill="none" stroke="var(--c-5)" stroke-width="3.4"/>
+          <text x="285" y="114" font-size="14" font-weight="600" fill="var(--c-5)">m</text>
+          <circle cx="200" cy="192" r="4" fill="currentColor"/>
+          <text x="200" y="322" text-anchor="middle" font-size="13.5" fill="currentColor" opacity=".78">sin margen basta con θ₁ &lt; θ₂</text>
+          <text x="200" y="342" text-anchor="middle" font-size="13.5" fill="var(--c-5)" font-weight="600">con margen se exige θ₁ + m &lt; θ₂</text>
+        </svg>
+      </figure>
+    </div>
+  </div>
+  <div class="notes">Si preguntan por qué sumar al ángulo y no al coseno: el ángulo es una distancia geodésica sobre la esfera, así que el margen es constante en toda la esfera. Con cos θ − m el margen efectivo cambia según dónde estés.</div>
+</section>
+
+<!-- ============ LOSS 6 ============ -->
+<section class="slide" data-sec="Sesión 1 · Funciones de pérdida" data-title="Por qué ArcFace desplazó a triplet">
+  <div class="head">
+    <p class="eyebrow">Pérdidas · 6 de 6</p>
+    <h2>Por qué usamos ArcFace en el ejercicio</h2>
+  </div>
+  <div class="fill">
+    <table>
+      <thead><tr><th style="width:24%"></th><th style="width:38%">Triplet + minería</th><th>ArcFace</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Muestreo</td><td>Necesita batches PK y minería en línea. Es la mitad del código y casi todos los bugs.</td><td class="k" style="color:var(--green-ink)">Batches aleatorios. No hay muestreo que diseñar.</td></tr>
+        <tr><td class="k">Convergencia</td><td>Frágil. Sensible al margen, al batch y a las etiquetas ruidosas.</td><td class="k" style="color:var(--green-ink)">Estable. Se comporta como entrenar un clasificador normal.</td></tr>
+        <tr><td class="k">Señal por paso</td><td>Una tercia por ancla. La mayoría con gradiente cero.</td><td class="k" style="color:var(--green-ink)">Cada muestra contra todos los centros de clase.</td></tr>
+        <tr><td class="k">Costo en memoria</td><td>Bajo.</td><td>Una matriz <code>dim × N_clases</code>. Con 100 000 identidades sí pesa.</td></tr>
+        <tr><td class="k">Requisito</td><td>Solo pares positivos. Sirve sin etiquetas de clase.</td><td>Necesita <strong>etiquetas de identidad</strong> en entrenamiento.</td></tr>
+      </tbody>
+    </table>
+    <div class="card flat" style="margin-top:22px">
+      <p class="body" style="max-width:none">Triplet no está mal: está <strong>superado</strong> para el caso normal. Sigue siendo la opción cuando no tienes etiquetas discretas, cuando las identidades son millones, o cuando entrenas con pares que vienen de otra señal. Para todo lo demás, empieza con ArcFace.</p>
+    </div>
+  </div>
+  <div class="notes">Aquí anuncia el extra: quien implemente triplet y muestre la comparación se lleva punto extra. Es la mejor forma de que lo entiendan de verdad.</div>
+</section>
+
+<!-- ============ EVAL 1 ============ -->
+<section class="slide" data-sec="Sesión 1 · Evaluación" data-title="Los dos protocolos">
+  <div class="head">
+    <p class="eyebrow">Evaluación · 1 de 4</p>
+    <h2>No hay accuracy. Hay dos preguntas distintas.</h2>
+  </div>
+  <div class="fill">
+    <figure>
+      <svg viewBox="0 0 1080 290" role="img" aria-label="Dos protocolos de evaluación: verificación uno a uno, que compara un par contra un umbral, e identificación uno a N, que ordena una galería y revisa si el acierto quedó entre los primeros.">
+        <defs><marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+
+        <text x="20" y="18" font-size="14" font-weight="600" fill="var(--c-pos)">Verificación · 1:1</text>
+        <text x="20" y="40" font-size="13" fill="currentColor" opacity=".7">“¿Estas dos fotos son de la misma persona?”</text>
+        <rect x="20" y="54" width="490" height="150" rx="9" fill="var(--surface)" stroke="var(--c-pos)" stroke-width="1.4"/>
+        <rect x="48" y="82" width="62" height="62" rx="5" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.2"/>
+        <rect x="48" y="154" width="62" height="34" rx="5" fill="none" stroke="none"/>
+        <rect x="128" y="82" width="62" height="62" rx="5" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.2"/>
+        <text x="79" y="118" text-anchor="middle" font-size="11.5" fill="currentColor">A</text>
+        <text x="159" y="118" text-anchor="middle" font-size="11.5" fill="currentColor">B</text>
+        <line x1="196" y1="113" x2="238" y2="113" stroke="currentColor" stroke-width="1.5" opacity=".5" marker-end="url(#ar4)"/>
+        <rect x="244" y="88" width="106" height="50" rx="6" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.4"/>
+        <text x="297" y="110" text-anchor="middle" font-size="12.5" fill="var(--c-pos)">cos(z_A, z_B)</text>
+        <text x="297" y="128" text-anchor="middle" font-size="14" font-weight="600" fill="var(--c-pos)">0.71</text>
+        <line x1="356" y1="113" x2="398" y2="113" stroke="currentColor" stroke-width="1.5" opacity=".5" marker-end="url(#ar4)"/>
+        <rect x="404" y="88" width="86" height="50" rx="6" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.3"/>
+        <text x="447" y="106" text-anchor="middle" font-size="11.5" fill="currentColor" opacity=".7">umbral 0.62</text>
+        <text x="447" y="126" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--green-ink)">sí</text>
+        <text x="265" y="232" font-size="13" fill="currentColor" opacity=".72">No hay catálogo. Hay un <tspan font-weight="600">umbral</tspan>, y</text>
+        <text x="265" y="252" font-size="13" fill="currentColor" opacity=".72">elegirlo es decidir qué error te duele más.</text>
+        <text x="265" y="276" font-size="12.5" font-weight="600" fill="var(--c-pos)" text-anchor="start">Métricas: ROC · TAR@FAR · EER</text>
+
+        <line x1="540" y1="10" x2="540" y2="280" stroke="currentColor" stroke-width="1" opacity=".2"/>
+
+        <text x="570" y="18" font-size="14" font-weight="600" fill="var(--c-neg)">Identificación · 1:N</text>
+        <text x="570" y="40" font-size="13" fill="currentColor" opacity=".7">“¿Quién es esta persona, de entre las que conozco?”</text>
+        <rect x="570" y="54" width="490" height="150" rx="9" fill="var(--surface)" stroke="var(--c-neg)" stroke-width="1.4"/>
+        <rect x="596" y="88" width="58" height="58" rx="5" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.2"/>
+        <text x="625" y="121" text-anchor="middle" font-size="11.5" fill="currentColor">query</text>
+        <line x1="660" y1="117" x2="698" y2="117" stroke="currentColor" stroke-width="1.5" opacity=".5" marker-end="url(#ar4)"/>
+        <rect x="704" y="74" width="120" height="86" rx="6" fill="var(--c-neg-soft)" stroke="var(--c-neg)" stroke-width="1.4"/>
+        <text x="764" y="98" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--c-5)">galería</text>
+        <text x="764" y="118" text-anchor="middle" font-size="11.5" fill="var(--c-5)" opacity=".85">N identidades</text>
+        <text x="764" y="138" text-anchor="middle" font-size="11.5" fill="var(--c-5)" opacity=".85">conocidas</text>
+        <line x1="830" y1="117" x2="868" y2="117" stroke="currentColor" stroke-width="1.5" opacity=".5" marker-end="url(#ar4)"/>
+        <g font-size="12" font-family="monospace">
+          <rect x="874" y="76" width="164" height="20" rx="3" fill="var(--green-tint)" stroke="var(--green)" stroke-width="1.2"/>
+          <text x="884" y="91" fill="var(--green-ink)">1 · id_042   0.83  ✓</text>
+          <rect x="874" y="100" width="164" height="20" rx="3" fill="var(--surface-2)"/>
+          <text x="884" y="115" fill="currentColor" opacity=".7">2 · id_117   0.74</text>
+          <rect x="874" y="124" width="164" height="20" rx="3" fill="var(--surface-2)"/>
+          <text x="884" y="139" fill="currentColor" opacity=".7">3 · id_008   0.69</text>
+        </g>
+        <text x="815" y="232" font-size="13" fill="currentColor" opacity=".72">Ordenas todo el catálogo y preguntas si el</text>
+        <text x="815" y="252" font-size="13" fill="currentColor" opacity=".72">correcto quedó entre los primeros k.</text>
+        <text x="815" y="276" font-size="12.5" font-weight="600" fill="var(--c-5)">Métricas: Recall@k · mAP</text>
+      </svg>
+      <figcaption>Elegir el protocolo es elegir el producto. Un control de acceso hace verificación; un buscador de catálogo hace identificación. El mismo modelo puede ser bueno en uno y mediocre en el otro.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ EVAL 2 ============ -->
+<section class="slide" data-sec="Sesión 1 · Evaluación" data-title="Recall@k y mAP">
+  <div class="head">
+    <p class="eyebrow">Evaluación · 2 de 4</p>
+    <h2>Recall@k y mAP</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2" style="align-items:center">
+      <figure>
+        <svg viewBox="0 0 520 300" role="img" aria-label="Dos rankings con los mismos aciertos en distintas posiciones: ambos tienen el mismo Recall arroba 5, pero el que pone los aciertos arriba tiene mayor mAP.">
+          <text x="16" y="16" font-size="13" font-weight="600" fill="currentColor">modelo A</text>
+          <g>
+            <rect x="16" y="28" width="42" height="42" rx="4" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.8"/>
+            <rect x="66" y="28" width="42" height="42" rx="4" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.8"/>
+            <rect x="116" y="28" width="42" height="42" rx="4" fill="var(--surface-2)" stroke="var(--rule)" stroke-width="1.2"/>
+            <rect x="166" y="28" width="42" height="42" rx="4" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.8"/>
+            <rect x="216" y="28" width="42" height="42" rx="4" fill="var(--surface-2)" stroke="var(--rule)" stroke-width="1.2"/>
+            <g font-size="17" text-anchor="middle" fill="var(--c-pos)" font-weight="600">
+              <text x="37" y="55">✓</text><text x="87" y="55">✓</text><text x="187" y="55">✓</text></g>
+            <g font-size="15" text-anchor="middle" fill="currentColor" opacity=".35">
+              <text x="137" y="55">·</text><text x="237" y="55">·</text></g>
+          </g>
+          <text x="290" y="44" font-size="13" fill="currentColor" opacity=".75">Recall@5 = 1.0</text>
+          <text x="290" y="64" font-size="13" font-weight="600" fill="var(--green-ink)">mAP = 0.86</text>
+
+          <text x="16" y="116" font-size="13" font-weight="600" fill="currentColor">modelo B</text>
+          <g>
+            <rect x="16" y="128" width="42" height="42" rx="4" fill="var(--surface-2)" stroke="var(--rule)" stroke-width="1.2"/>
+            <rect x="66" y="128" width="42" height="42" rx="4" fill="var(--surface-2)" stroke="var(--rule)" stroke-width="1.2"/>
+            <rect x="116" y="128" width="42" height="42" rx="4" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.8"/>
+            <rect x="166" y="128" width="42" height="42" rx="4" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.8"/>
+            <rect x="216" y="128" width="42" height="42" rx="4" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.8"/>
+            <g font-size="17" text-anchor="middle" fill="var(--c-pos)" font-weight="600">
+              <text x="137" y="155">✓</text><text x="187" y="155">✓</text><text x="237" y="155">✓</text></g>
+            <g font-size="15" text-anchor="middle" fill="currentColor" opacity=".35">
+              <text x="37" y="155">·</text><text x="87" y="155">·</text></g>
+          </g>
+          <text x="290" y="144" font-size="13" fill="currentColor" opacity=".75">Recall@5 = 1.0</text>
+          <text x="290" y="164" font-size="13" font-weight="600" fill="var(--c-5)">mAP = 0.48</text>
+          <line x1="16" y1="206" x2="504" y2="206" stroke="currentColor" stroke-width="1" opacity=".2"/>
+          <text x="16" y="234" font-size="13.5" fill="currentColor" opacity=".8">Mismo Recall@5. El usuario los vive muy distinto.</text>
+          <text x="16" y="258" font-size="13.5" fill="currentColor" opacity=".8">Recall@k pregunta <tspan font-weight="600">si</tspan> acertaste; mAP pregunta</text>
+          <text x="16" y="278" font-size="13.5" fill="currentColor" opacity=".8"><tspan font-weight="600">qué tan arriba</tspan> pusiste los aciertos.</text>
+        </svg>
+      </figure>
+      <div class="vlist">
+        <div class="card">
+          <h3>Recall@1</h3>
+          <p class="small" style="color:var(--ink-soft)">¿El vecino más cercano es de la identidad correcta? La métrica más honesta y la más dura. <strong>Es la que van a reportar.</strong></p>
+        </div>
+        <div class="card">
+          <h3>Recall@5</h3>
+          <p class="small" style="color:var(--ink-soft)">Realista cuando hay un humano revisando: “dame cinco candidatos”. Casi siempre mucho más alto que Recall@1.</p>
+        </div>
+        <div class="card">
+          <h3>mAP</h3>
+          <p class="small" style="color:var(--ink-soft)">Promedia la precisión en cada posición donde hay un acierto. Castiga meter basura arriba. La métrica de un buscador.</p>
+        </div>
+        <div class="card flat">
+          <p class="small" style="color:var(--ink-soft)"><strong>Regla de la casa:</strong> la query nunca se cuenta a sí misma como acierto. Es el bug número uno y da resultados espectaculares que no son reales.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EVAL 3 ============ -->
+<section class="slide" data-sec="Sesión 1 · Evaluación" data-title="El umbral y TAR@FAR">
+  <div class="head">
+    <p class="eyebrow">Evaluación · 3 de 4</p>
+    <h2>El umbral no lo elige el modelo. Lo eliges tú.</h2>
+  </div>
+  <div class="fill">
+    <figure>
+      <svg viewBox="0 0 740 268" role="img" aria-label="A la izquierda, las distribuciones de similitud coseno para pares de la misma identidad y de identidades distintas se traslapan; el umbral parte ese traslape. A la derecha, la curva ROC en escala logarítmica de FAR muestra que el TAR cae fuerte al exigir tasas de falsa aceptación bajas.">
+        <path d="M 46,206 L 46,205.8 50,205.7 54,205.5 58,205.4 61,205.1 65,204.9 69,204.5 73,204.0 77,203.4 81,202.6 84,201.7 88,200.5 92,199.1 96,197.4 100,195.3 104,192.9 108,190.0 111,186.7 115,183.0 119,178.7 123,173.9 127,168.7 131,162.9 134,156.6 138,150.0 142,142.9 146,135.7 150,128.2 154,120.7 157,113.4 161,106.2 165,99.4 169,93.1 173,87.5 177,82.7 181,78.8 184,76.0 188,74.2 192,73.5 196,74.0 200,75.6 204,78.3 207,82.1 211,86.7 215,92.2 219,98.4 223,105.1 227,112.2 231,119.6 234,127.1 238,134.5 242,141.8 246,148.9 250,155.6 254,161.9 257,167.8 261,173.2 265,178.0 269,182.4 273,186.2 277,189.6 281,192.5 284,195.0 288,197.1 292,198.8 296,200.3 300,201.5 304,202.5 307,203.3 311,203.9 315,204.4 319,204.8 323,205.1 327,205.3 330,205.5 334,205.6 338,205.7 342,205.8 346,205.9 350,205.9 354,205.9 357,206.0 361,206.0 365,206.0 369,206.0 373,206.0 377,206.0 380,206.0 384,206.0 388,206.0 392,206.0 L 392,206 Z"
+          fill="var(--c-neg)" fill-opacity=".28" stroke="var(--c-neg)" stroke-width="2"/>
+        <path d="M 46,206 L 46,206.0 50,206.0 54,206.0 58,206.0 61,206.0 65,206.0 69,206.0 73,206.0 77,206.0 81,206.0 84,206.0 88,206.0 92,206.0 96,206.0 100,206.0 104,206.0 108,206.0 111,206.0 115,206.0 119,206.0 123,206.0 127,206.0 131,206.0 134,206.0 138,206.0 142,206.0 146,206.0 150,205.9 154,205.9 157,205.9 161,205.8 165,205.7 169,205.6 173,205.5 177,205.2 181,204.9 184,204.5 188,203.9 192,203.2 196,202.2 200,200.9 204,199.4 207,197.4 211,194.9 215,191.9 219,188.3 223,184.0 227,179.0 231,173.3 234,166.8 238,159.5 242,151.4 246,142.8 250,133.6 254,123.9 257,114.1 261,104.3 265,94.7 269,85.5 273,77.1 277,69.7 281,63.5 284,58.7 288,55.5 292,54.0 296,54.2 300,56.1 304,59.7 307,64.8 311,71.3 315,79.0 319,87.6 323,96.8 327,106.5 330,116.4 334,126.2 338,135.7 342,144.8 346,153.4 350,161.2 354,168.3 357,174.7 361,180.2 365,185.1 369,189.2 373,192.6 377,195.5 380,197.9 384,199.8 388,201.3 392,202.4 L 392,206 Z"
+          fill="var(--c-pos)" fill-opacity=".3" stroke="var(--c-pos)" stroke-width="2"/>
+        <line x1="46" y1="206" x2="400" y2="206" stroke="currentColor" stroke-width="1.3" opacity=".5"/>
+        <g font-size="11" fill="currentColor" opacity=".6" text-anchor="middle">
+          <text x="113" y="222">0.0</text><text x="179" y="222">0.25</text><text x="246" y="222">0.5</text>
+          <text x="312" y="222">0.75</text><text x="379" y="222">1.0</text></g>
+        <text x="220" y="242" text-anchor="middle" font-size="12" fill="currentColor" opacity=".72">similitud coseno</text>
+        <line x1="259" y1="40" x2="259" y2="212" stroke="var(--ink)" stroke-width="2.4" stroke-dasharray="6 4"/>
+        <text x="259" y="32" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">umbral</text>
+        <text x="150" y="60" font-size="12.5" font-weight="600" fill="var(--c-neg)">identidades</text>
+        <text x="150" y="76" font-size="12.5" font-weight="600" fill="var(--c-neg)">distintas</text>
+        <text x="330" y="60" font-size="12.5" font-weight="600" fill="var(--c-pos)">misma</text>
+        <text x="330" y="76" font-size="12.5" font-weight="600" fill="var(--c-pos)">identidad</text>
+        <text x="228" y="196" text-anchor="end" font-size="11" fill="var(--c-5)" font-weight="600">falsas</text>
+        <text x="228" y="184" text-anchor="end" font-size="11" fill="var(--c-5)" font-weight="600">aceptaciones →</text>
+        <text x="290" y="196" font-size="11" fill="var(--c-5)" font-weight="600">← falsos</text>
+        <text x="290" y="184" font-size="11" fill="var(--c-5)" font-weight="600">rechazos</text>
+
+        <line x1="430" y1="20" x2="430" y2="248" stroke="currentColor" stroke-width="1" opacity=".18"/>
+
+        <g stroke="currentColor" stroke-width="1.2" opacity=".45">
+          <line x1="470" y1="206" x2="700" y2="206"/><line x1="470" y1="206" x2="470" y2="42"/></g>
+        <g stroke="currentColor" stroke-width=".8" opacity=".16">
+          <line x1="528" y1="42" x2="528" y2="206"/><line x1="585" y1="42" x2="585" y2="206"/><line x1="642" y1="42" x2="642" y2="206"/>
+          <line x1="470" y1="124" x2="700" y2="124"/><line x1="470" y1="83" x2="700" y2="83"/><line x1="470" y1="165" x2="700" y2="165"/></g>
+        <path d="M 700,42 L 691,42.1 686,42.2 682,42.5 677,42.9 672,43.8 666,45.2 659,47.6 651,51.3 643,56.6 633,63.9 623,73.5 611,85.2 599,98.8 586,113.7 572,129.2 556,144.4 540,158.5 523,170.9 505,181.2 486,189.2 476,192.4"
+          fill="none" stroke="var(--c-pos)" stroke-width="2.6" stroke-linejoin="round"/>
+        <circle cx="528" cy="168" r="6" fill="var(--c-5)"/>
+        <circle cx="585" cy="115" r="6" fill="var(--c-5)"/>
+        <text x="536" y="164" font-size="11.5" font-weight="600" fill="var(--c-5)">TAR 0.23</text>
+        <text x="593" y="111" font-size="11.5" font-weight="600" fill="var(--c-5)">TAR 0.56</text>
+        <g font-size="11" fill="currentColor" opacity=".6" text-anchor="middle">
+          <text x="470" y="222">10⁻⁴</text><text x="528" y="222">10⁻³</text><text x="585" y="222">10⁻²</text>
+          <text x="642" y="222">10⁻¹</text><text x="700" y="222">1</text></g>
+        <g font-size="11" fill="currentColor" opacity=".6" text-anchor="end">
+          <text x="464" y="210">0</text><text x="464" y="169">.25</text><text x="464" y="128">.50</text>
+          <text x="464" y="87">.75</text><text x="464" y="46">1.0</text></g>
+        <text x="585" y="242" text-anchor="middle" font-size="12" fill="currentColor" opacity=".72">FAR (escala log)</text>
+        <text x="585" y="32" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">ROC · TAR vs. FAR</text>
+      </svg>
+      <figcaption>El mismo modelo, dos operaciones distintas. Con FAR de 1 en 100 reconoce a poco más de la mitad; con FAR de 1 en 1000, a uno de cada cuatro. Reportar “funciona bien” sin decir a qué FAR no significa nada.</figcaption>
+    </figure>
+  </div>
+  <div class="notes">Ejemplo concreto: un torniquete de oficina tolera FAR alto; un sistema que autoriza pagos, no. El umbral lo fija quien asume el costo del error, no quien entrena el modelo.</div>
+</section>
+
+<!-- ============ EVAL 4 ============ -->
+<section class="slide" data-sec="Sesión 1 · Evaluación" data-title="Fuga de identidades">
+  <div class="head">
+    <p class="eyebrow">Evaluación · 4 de 4</p>
+    <h2>El error que va a arruinar sus resultados</h2>
+  </div>
+  <div class="fill">
+    <figure>
+      <svg viewBox="0 0 1020 250" role="img" aria-label="Split incorrecto: las fotos de una misma identidad se reparten entre entrenamiento y prueba, así que el modelo ya vio esa identidad. Split correcto: las identidades completas van a un lado o al otro.">
+        <text x="20" y="18" font-size="14" font-weight="600" fill="var(--c-5)">✗ Split por imagen</text>
+        <rect x="20" y="32" width="470" height="176" rx="9" fill="var(--surface)" stroke="var(--c-5)" stroke-width="1.5"/>
+        <text x="86" y="58" text-anchor="middle" font-size="12" fill="currentColor" opacity=".65">identidad 042</text>
+        <g><rect x="40" y="68" width="34" height="34" rx="4" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.3"/>
+           <rect x="80" y="68" width="34" height="34" rx="4" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.3"/>
+           <rect x="120" y="68" width="34" height="34" rx="4" fill="var(--c-neg-soft)" stroke="var(--c-5)" stroke-width="1.6"/></g>
+        <text x="86" y="126" text-anchor="middle" font-size="12" fill="currentColor" opacity=".65">identidad 117</text>
+        <g><rect x="40" y="136" width="34" height="34" rx="4" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.3"/>
+           <rect x="80" y="136" width="34" height="34" rx="4" fill="var(--c-neg-soft)" stroke="var(--c-5)" stroke-width="1.6"/>
+           <rect x="120" y="136" width="34" height="34" rx="4" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.3"/></g>
+        <line x1="182" y1="60" x2="182" y2="184" stroke="currentColor" stroke-width="1" opacity=".22"/>
+        <text x="210" y="86" font-size="13" fill="var(--c-5)" font-weight="600">El modelo ya vio a la 042</text>
+        <text x="210" y="106" font-size="13" fill="currentColor" opacity=".72">durante el entrenamiento.</text>
+        <text x="210" y="140" font-size="13" fill="currentColor" opacity=".72">Recall@1 = 0.97 y una</text>
+        <text x="210" y="160" font-size="13" fill="currentColor" opacity=".72">sensación estupenda.</text>
+        <text x="210" y="184" font-size="13" font-weight="600" fill="var(--c-5)">En producción: 0.41</text>
+
+        <text x="530" y="18" font-size="14" font-weight="600" fill="var(--green-ink)">✓ Split por identidad</text>
+        <rect x="530" y="32" width="470" height="176" rx="9" fill="var(--surface)" stroke="var(--green)" stroke-width="1.5"/>
+        <text x="596" y="58" text-anchor="middle" font-size="12" fill="currentColor" opacity=".65">identidad 042</text>
+        <g><rect x="550" y="68" width="34" height="34" rx="4" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.3"/>
+           <rect x="590" y="68" width="34" height="34" rx="4" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.3"/>
+           <rect x="630" y="68" width="34" height="34" rx="4" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.3"/></g>
+        <text x="596" y="126" text-anchor="middle" font-size="12" fill="currentColor" opacity=".65">identidad 117</text>
+        <g><rect x="550" y="136" width="34" height="34" rx="4" fill="var(--c-neg-soft)" stroke="var(--c-5)" stroke-width="1.6"/>
+           <rect x="590" y="136" width="34" height="34" rx="4" fill="var(--c-neg-soft)" stroke="var(--c-5)" stroke-width="1.6"/>
+           <rect x="630" y="136" width="34" height="34" rx="4" fill="var(--c-neg-soft)" stroke="var(--c-5)" stroke-width="1.6"/></g>
+        <line x1="692" y1="60" x2="692" y2="184" stroke="currentColor" stroke-width="1" opacity=".22"/>
+        <text x="720" y="86" font-size="13" fill="var(--green-ink)" font-weight="600">Una identidad completa</text>
+        <text x="720" y="106" font-size="13" fill="currentColor" opacity=".72">cae de un solo lado.</text>
+        <text x="720" y="140" font-size="13" fill="currentColor" opacity=".72">Recall@1 = 0.63, que es</text>
+        <text x="720" y="160" font-size="13" fill="currentColor" opacity=".72">lo que de verdad tienes.</text>
+        <text x="720" y="184" font-size="13" font-weight="600" fill="var(--green-ink)">En producción: 0.63</text>
+
+        <g font-size="12" fill="currentColor">
+          <rect x="380" y="228" width="14" height="14" rx="3" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.3"/>
+          <text x="402" y="240">entrenamiento</text>
+          <rect x="520" y="228" width="14" height="14" rx="3" fill="var(--c-neg-soft)" stroke="var(--c-5)" stroke-width="1.6"/>
+          <text x="542" y="240">prueba</text></g>
+      </svg>
+      <figcaption>Evaluar sobre identidades que el modelo ya vio mide memoria, no generalización. Es exactamente lo que no quieres saber, medido con mucha precisión.</figcaption>
+    </figure>
+  </div>
+  <div class="notes"><b>Repítelo.</b> Es el error que más veces van a cometer, y en la sesión 2 les toca implementar justo esta separación. Si se llevan esto, la práctica sale.</div>
+</section>
+
+<!-- ============ PROD 1 ============ -->
+<section class="slide" data-sec="Sesión 1 · En producción" data-title="Preentrenados: cuándo no entrenar">
+  <div class="head">
+    <p class="eyebrow">En producción · 1 de 3</p>
+    <h2>Antes de entrenar nada, prueba lo que ya existe</h2>
+  </div>
+  <div class="fill">
+    <table>
+      <thead><tr><th style="width:17%">Modelo</th><th style="width:27%">Qué aprendió</th><th>Cuándo sirve sin tocarlo</th></tr></thead>
+      <tbody>
+        <tr><td class="k">CLIP</td><td>Alineación imagen–texto sobre cientos de millones de pares web.</td><td>Búsqueda semántica y por texto. Mediocre para distinguir instancias muy parecidas entre sí.</td></tr>
+        <tr><td class="k">DINOv2</td><td>Autosupervisado, sin etiquetas, sobre imágenes curadas.</td><td>El mejor punto de partida genérico para parecido visual. Suele ganarle a un modelo propio mal entrenado.</td></tr>
+        <tr><td class="k">ArcFace / insightface</td><td>Millones de caras con supervisión de identidad.</td><td>Caras. Si tu problema son caras, <strong>usa esto</strong> y no entrenes nada.</td></tr>
+      </tbody>
+    </table>
+    <div class="cols c3" style="margin-top:24px;gap:18px">
+      <div class="card flat"><h3>Úsalo tal cual</h3><p class="small" style="color:var(--ink-soft)">Tu dominio se parece al de entrenamiento y tienes menos de ~50 identidades.</p></div>
+      <div class="card flat"><h3>Fine-tuning</h3><p class="small" style="color:var(--ink-soft)">Tu dominio es distinto (radiografías, satélite, microscopía) y tienes cientos de identidades con varias fotos.</p></div>
+      <div class="card flat"><h3>Desde cero</h3><p class="small" style="color:var(--ink-soft)">Casi nunca. Solo si tus imágenes no se parecen en nada a fotos naturales.</p></div>
+    </div>
+    <p class="small" style="margin-top:20px;text-align:center">La línea base honesta de cualquier proyecto: <strong>DINOv2 congelado, sin entrenar nada.</strong> Si tu modelo no le gana, no tienes modelo.</p>
+  </div>
+  <div class="notes">Este baseline es también un extra del ejercicio. Vale mucho que alguien lo corra: es humillante y educativo a partes iguales.</div>
+</section>
+
+<!-- ============ PROD 2 ============ -->
+<section class="slide" data-sec="Sesión 1 · En producción" data-title="Buscar entre millones">
+  <div class="head">
+    <p class="eyebrow">En producción · 2 de 3</p>
+    <h2>El modelo es la mitad del sistema</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2" style="align-items:center">
+      <figure>
+        <svg viewBox="0 0 500 260" role="img" aria-label="Búsqueda exacta compara la consulta contra todos los vectores del catálogo; un índice aproximado como HNSW navega un grafo y visita solo una fracción.">
+          <text x="16" y="16" font-size="13" font-weight="600" fill="currentColor" opacity=".75">exacta · O(N)</text>
+          <circle cx="34" cy="60" r="9" fill="var(--ink)"/>
+          <g stroke="currentColor" stroke-width="1" opacity=".38">
+            <line x1="43" y1="60" x2="196" y2="34"/><line x1="43" y1="60" x2="196" y2="54"/>
+            <line x1="43" y1="60" x2="196" y2="74"/><line x1="43" y1="60" x2="196" y2="94"/>
+            <line x1="43" y1="60" x2="196" y2="114"/></g>
+          <g fill="currentColor" opacity=".45">
+            <circle cx="200" cy="34" r="5.5"/><circle cx="200" cy="54" r="5.5"/><circle cx="200" cy="74" r="5.5"/>
+            <circle cx="200" cy="94" r="5.5"/><circle cx="200" cy="114" r="5.5"/></g>
+          <text x="224" y="78" font-size="12.5" fill="currentColor" opacity=".7">las N comparaciones</text>
+          <text x="16" y="160" font-size="13" font-weight="600" fill="var(--green-ink)">HNSW · O(log N)</text>
+          <circle cx="34" cy="204" r="9" fill="var(--ink)"/>
+          <g stroke="currentColor" stroke-width=".8" opacity=".16">
+            <line x1="90" y1="180" x2="150" y2="234"/><line x1="150" y1="176" x2="90" y2="230"/>
+            <line x1="90" y1="180" x2="150" y2="176"/><line x1="90" y1="230" x2="150" y2="234"/>
+            <line x1="150" y1="176" x2="206" y2="204"/><line x1="150" y1="234" x2="206" y2="204"/></g>
+          <g fill="currentColor" opacity=".22">
+            <circle cx="90" cy="180" r="5"/><circle cx="90" cy="230" r="5"/><circle cx="150" cy="176" r="5"/>
+            <circle cx="150" cy="234" r="5"/><circle cx="206" cy="204" r="5"/><circle cx="120" cy="252" r="5"/>
+            <circle cx="176" cy="252" r="5"/><circle cx="62" cy="252" r="5"/></g>
+          <path d="M 43 204 L 84 184 L 146 180 L 202 204" fill="none" stroke="var(--green)" stroke-width="2.6" stroke-linejoin="round"/>
+          <g fill="var(--green)"><circle cx="90" cy="180" r="6"/><circle cx="150" cy="176" r="6"/><circle cx="206" cy="204" r="6"/></g>
+          <text x="230" y="200" font-size="12.5" fill="var(--green-ink)" font-weight="600">un puñado de saltos</text>
+          <text x="230" y="220" font-size="12" fill="currentColor" opacity=".62">recall ~0.95, no 1.0</text>
+        </svg>
+      </figure>
+      <div class="vlist">
+        <ul class="ticks">
+          <li>Hasta <strong>~100 000 vectores</strong>, una multiplicación de matrices en numpy o torch basta. No metas una base vectorial todavía.</li>
+          <li>Arriba de eso: <code>faiss</code>, <code>hnswlib</code>, o un motor con índice vectorial. Cambias exactitud por latencia.</li>
+          <li>Un índice aproximado <strong>tiene su propio recall</strong>. Tu métrica de punta a punta es el recall del modelo por el del índice.</li>
+          <li>Los vectores se re-indexan cuando cambias de modelo. Todos. Guarda siempre la versión del modelo junto al vector.</li>
+        </ul>
+        <div class="card flat">
+          <p class="small" style="color:var(--ink-soft)"><strong>Para el ejercicio:</strong> con unos miles de imágenes, fuerza bruta en torch es más rápido que construir un índice. Montar FAISS y medir la latencia es un extra, no un requisito.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROD 3 ============ -->
+<section class="slide" data-sec="Sesión 1 · En producción" data-title="Dónde falla">
+  <div class="head">
+    <p class="eyebrow">En producción · 3 de 3</p>
+    <h2>Dónde falla, y a quién le falla</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2">
+      <div class="vlist">
+        <div class="card">
+          <h3>Desempeño desigual entre grupos</h3>
+          <p class="small" style="color:var(--ink-soft)">Un modelo de caras entrenado con datos sesgados tiene FAR muy distinto por tono de piel, edad o género. El promedio se ve bien y el sistema falla sistemáticamente sobre los mismos.</p>
+          <p class="small" style="margin-top:8px"><strong>Qué hacer:</strong> reportar métricas <em>por subgrupo</em>, no solo globales.</p>
+        </div>
+        <div class="card">
+          <h3>Desfase de dominio</h3>
+          <p class="small" style="color:var(--ink-soft)">Entrenaste con fotos de estudio y en producción llegan cámaras de vigilancia nocturnas. El espacio sigue funcionando; ya no funciona para tus datos.</p>
+        </div>
+      </div>
+      <div class="vlist">
+        <div class="card">
+          <h3>El umbral envejece</h3>
+          <p class="small" style="color:var(--ink-soft)">Al crecer el catálogo, la probabilidad de que <em>alguien</em> se parezca sube. El mismo umbral produce más falsas aceptaciones cada mes sin que nada haya cambiado en el modelo.</p>
+        </div>
+        <div class="card">
+          <h3>Un embedding es dato personal</h3>
+          <p class="small" style="color:var(--ink-soft)">De un vector facial se puede reconstruir una cara aproximada, y funciona como identificador único entre sistemas. Un catálogo de embeddings se protege como una base de datos biométrica, porque lo es.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes">Si eligen caras para el ejercicio, este es el momento de pedirles que usen un dataset con licencia clara y que no suban fotos de personas reales al repo.</div>
+</section>
+
+<!-- ============ CIERRE S1 ============ -->
+<section class="slide" data-sec="Sesión 1 · Teoría" data-title="Lo que hay que recordar">
+  <div class="head">
+    <p class="eyebrow">Cierre de la sesión 1</p>
+    <h2>Cinco cosas que se llevan</h2>
+  </div>
+  <div class="fill">
+    <div class="vlist" style="gap:13px">
+      <div class="card"><p class="body" style="max-width:none"><strong>1 ·</strong> Un clasificador fija las clases en su arquitectura. Un modelo de embeddings las saca a una tabla de vectores que puedes editar sin reentrenar.</p></div>
+      <div class="card"><p class="body" style="max-width:none"><strong>2 ·</strong> Backbone + head + L2-norm. El head de la pérdida se tira; el embedding normalizado es el producto.</p></div>
+      <div class="card"><p class="body" style="max-width:none"><strong>3 ·</strong> ArcFace convierte el logit en un ángulo y le exige un margen. No necesita minería de negativos, y por eso desplazó a triplet.</p></div>
+      <div class="card"><p class="body" style="max-width:none"><strong>4 ·</strong> No hay accuracy. Hay Recall@k para buscar y TAR@FAR para verificar, y el umbral es una decisión de negocio.</p></div>
+      <div class="card" style="border-color:var(--green);border-width:1.5px"><p class="body" style="max-width:none"><strong>5 ·</strong> Si una identidad aparece en entrenamiento y en prueba, tus números no valen nada. <em>La próxima sesión implementan justo esto.</em></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DIVISOR S2 ============ -->
+<section class="slide divider" data-sec="Sesión 2 · Implementación" data-title="Divisor — Sesión 2" data-nonum>
+  <svg class="arcmark" viewBox="0 0 200 200" aria-hidden="true" fill="none" stroke="currentColor">
+    <circle cx="100" cy="100" r="86" stroke-width="1.2"/>
+    <circle cx="100" cy="100" r="60" stroke-width="1.2" stroke-dasharray="3 6"/>
+    <line x1="100" y1="100" x2="174" y2="56" stroke-width="1.6"/>
+    <line x1="100" y1="100" x2="152" y2="170" stroke-width="1.6"/>
+    <path d="M 148 74 A 60 60 0 0 1 130 143" stroke-width="2.4"/>
+  </svg>
+  <div class="inner">
+    <p class="num">02</p>
+    <p class="eyebrow">Sesión 2 · 2 horas</p>
+    <h1>Implementación</h1>
+    <div class="plan">
+      <span>0:20 · Recap de torch</span><span>0:40 · Recorrido del código</span>
+      <span>0:05 · Receso</span><span>0:30 · Los datos</span>
+      <span>0:15 · El ejercicio</span><span>0:10 · Arranque en vivo</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TORCH 1 ============ -->
+<section class="slide" data-sec="Sesión 2 · Recap de torch" data-title="El camino de un batch">
+  <div class="head">
+    <p class="eyebrow">Recap de torch · 1 de 2</p>
+    <h2>El camino de un batch</h2>
+  </div>
+  <div class="fill">
+    <figure>
+      <svg viewBox="0 0 1080 250" role="img" aria-label="Flujo de datos en PyTorch: el Sampler decide qué índices, el Dataset carga y transforma cada imagen, collate apila los tensores y el DataLoader entrega el batch al modelo.">
+        <defs><marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <g fill="none" stroke="currentColor" stroke-width="1.6" opacity=".5" marker-end="url(#ar5)">
+          <line x1="196" y1="88" x2="240" y2="88"/><line x1="424" y1="88" x2="468" y2="88"/>
+          <line x1="652" y1="88" x2="696" y2="88"/><line x1="880" y1="88" x2="924" y2="88"/></g>
+
+        <rect x="24" y="40" width="172" height="96" rx="8" fill="var(--c-neg-soft)" stroke="var(--c-5)" stroke-width="1.8"/>
+        <text x="110" y="68" text-anchor="middle" font-size="14.5" font-weight="600" fill="var(--c-5)">Sampler</text>
+        <text x="110" y="92" text-anchor="middle" font-size="12.5" fill="var(--c-5)" opacity=".9">decide QUÉ índices</text>
+        <text x="110" y="112" text-anchor="middle" font-size="12.5" fill="var(--c-5)" opacity=".9">y en qué orden</text>
+
+        <rect x="240" y="40" width="184" height="96" rx="8" fill="var(--c-neg-soft)" stroke="var(--c-5)" stroke-width="1.8"/>
+        <text x="332" y="68" text-anchor="middle" font-size="14.5" font-weight="600" fill="var(--c-5)">Dataset</text>
+        <text x="332" y="92" text-anchor="middle" font-size="12.5" fill="var(--c-5)" opacity=".9">__getitem__(i)</text>
+        <text x="332" y="112" text-anchor="middle" font-size="12.5" fill="var(--c-5)" opacity=".9">abre, transforma, etiqueta</text>
+
+        <rect x="468" y="40" width="184" height="96" rx="8" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.4"/>
+        <text x="560" y="68" text-anchor="middle" font-size="14.5" font-weight="600" fill="currentColor">collate_fn</text>
+        <text x="560" y="92" text-anchor="middle" font-size="12.5" fill="currentColor" opacity=".7">apila N tensores</text>
+        <text x="560" y="112" text-anchor="middle" font-size="12.5" fill="currentColor" opacity=".7">en uno solo</text>
+
+        <rect x="696" y="40" width="184" height="96" rx="8" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.4"/>
+        <text x="788" y="68" text-anchor="middle" font-size="14.5" font-weight="600" fill="currentColor">DataLoader</text>
+        <text x="788" y="92" text-anchor="middle" font-size="12.5" fill="currentColor" opacity=".7">workers, shuffle,</text>
+        <text x="788" y="112" text-anchor="middle" font-size="12.5" fill="currentColor" opacity=".7">prefetch, pin_memory</text>
+
+        <rect x="924" y="40" width="132" height="96" rx="8" fill="var(--green-tint)" stroke="var(--green)" stroke-width="1.8"/>
+        <text x="990" y="76" text-anchor="middle" font-size="14.5" font-weight="600" fill="var(--green-ink)">modelo</text>
+        <text x="990" y="100" text-anchor="middle" font-size="12" fill="var(--green-ink)" opacity=".85">(B,3,H,W)</text>
+
+        <rect x="24" y="168" width="400" height="58" rx="8" fill="none" stroke="var(--c-5)" stroke-width="2" stroke-dasharray="7 5"/>
+        <text x="224" y="192" text-anchor="middle" font-size="14" font-weight="600" fill="var(--c-5)">Esto es lo que ustedes escriben</text>
+        <text x="224" y="212" text-anchor="middle" font-size="12.5" fill="var(--c-5)" opacity=".9">todo lo demás ya viene resuelto</text>
+        <rect x="468" y="168" width="588" height="58" rx="8" fill="none" stroke="var(--green)" stroke-width="1.6"/>
+        <text x="762" y="192" text-anchor="middle" font-size="14" font-weight="600" fill="var(--green-ink)">Esto ya está en el repo</text>
+        <text x="762" y="212" text-anchor="middle" font-size="12.5" fill="var(--green-ink)" opacity=".85">y no hace falta tocarlo para entregar</text>
+      </svg>
+      <figcaption>El 90% de los bugs de un entrenamiento de embeddings vive en las dos primeras cajas. Por eso el ejercicio es exactamente ahí.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ TORCH 2 ============ -->
+<section class="slide" data-sec="Sesión 2 · Recap de torch" data-title="Las tres piezas en código">
+  <div class="head">
+    <p class="eyebrow">Recap de torch · 2 de 2</p>
+    <h2>Las tres piezas, en código</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2" style="align-items:start">
+<pre><span class="kw">class</span> <span class="fn">MyDataset</span>(Dataset):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, items, transform):
+        self.items = items          <span class="cm"># lista de (ruta, label)</span>
+        self.transform = transform
+
+    <span class="kw">def</span> <span class="fn">__len__</span>(self):
+        <span class="kw">return</span> len(self.items)
+
+    <span class="kw">def</span> <span class="fn">__getitem__</span>(self, i):
+        path, label = self.items[i]
+        img = Image.open(path).convert(<span class="st">"RGB"</span>)
+        <span class="cm"># transform devuelve un tensor (3,H,W)</span>
+        <span class="kw">return</span> self.transform(img), label</pre>
+      <div class="vlist">
+<pre>loader = DataLoader(
+    dataset,
+    batch_size=<span class="nu">64</span>,
+    shuffle=<span class="kw">True</span>,      <span class="cm"># basta con ArcFace</span>
+    num_workers=<span class="nu">4</span>,
+    pin_memory=<span class="kw">True</span>,
+)
+
+<span class="kw">for</span> images, labels <span class="kw">in</span> loader:
+    images = images.to(device)
+    labels = labels.to(device)
+    ...</pre>
+        <div class="card flat">
+          <p class="small" style="color:var(--ink-soft)"><strong>En Mac:</strong> <code>device = "mps"</code>. En una PC con NVIDIA, <code>"cuda"</code>. Si no hay ninguna, <code>"cpu"</code> y bajan el tamaño de imagen. El repo lo detecta solo.</p>
+        </div>
+        <div class="card flat">
+          <p class="small" style="color:var(--ink-soft)"><strong>Trampa clásica en Mac:</strong> con <code>num_workers &gt; 0</code> el script tiene que estar bajo <code>if __name__ == "__main__"</code> o se cuelga al arrancar.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes">Si el grupo viene de Keras, dedica aquí 5 minutos extra: el concepto de que el Dataset devuelve UN ejemplo y el DataLoader arma el batch es lo que más cuesta.</div>
+</section>
+
+<!-- ============ REPO ============ -->
+<section class="slide" data-sec="Sesión 2 · El código" data-title="Estructura del repositorio">
+  <div class="head">
+    <p class="eyebrow">El código · 1 de 4</p>
+    <h2>Qué está hecho y qué falta</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2" style="align-items:start">
+<pre>intro-to-embeddings/
+├── src/embeddings/
+│   ├── config.py     <span class="cm"># hiperparámetros</span>
+│   ├── <span class="todo">data.py</span>       <span class="cm"># ← USTEDES</span>
+│   ├── models.py     <span class="cm"># backbones + head</span>
+│   ├── losses.py     <span class="cm"># ArcFace</span>
+│   ├── evaluate.py   <span class="cm"># NO TOCAR</span>
+│   └── train.py      <span class="cm"># loop completo</span>
+├── scripts/
+│   ├── make_synthetic.py
+│   └── run_train.py
+├── configs/
+│   ├── mnist.yaml
+│   └── custom.yaml
+└── data/             <span class="cm"># no versionado</span></pre>
+      <div class="vlist">
+        <div class="card">
+          <span class="tag neg">Ustedes</span>
+          <h3 style="margin-top:12px"><code>data.py</code></h3>
+          <ul class="ticks con" style="font-size:15.5px;gap:8px;margin-top:8px">
+            <li><code>IdentityImageDataset</code></li>
+            <li><code>make_open_set_split</code></li>
+            <li><code>build_transforms</code></li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="tag">Ya está</span>
+          <ul class="ticks" style="font-size:15.5px;gap:8px;margin-top:12px">
+            <li><code>models.py</code> — tres backbones y el head, con la dimensión configurable.</li>
+            <li><code>losses.py</code> — ArcFace lista, con <code>s</code> y <code>m</code>.</li>
+            <li><code>train.py</code> — loop, checkpoints, curvas.</li>
+          </ul>
+        </div>
+        <div class="card" style="border-color:var(--green);border-width:1.5px">
+          <span class="tag">Congelado</span>
+          <h3 style="margin-top:12px"><code>evaluate.py</code></h3>
+          <p class="small" style="color:var(--ink-soft)">Recall@k, mAP y TAR@FAR. <strong>No lo modifiquen.</strong> Si cada equipo mide distinto, la comparación de la sesión 3 no significa nada.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CODIGO: MODELO ============ -->
+<section class="slide" data-sec="Sesión 2 · El código" data-title="El modelo">
+  <div class="head">
+    <p class="eyebrow">El código · 2 de 4</p>
+    <h2>El modelo: backbone intercambiable, head fijo</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2" style="align-items:start">
+<pre><span class="kw">class</span> <span class="fn">EmbeddingModel</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, backbone=<span class="st">"resnet18"</span>, dim=<span class="nu">128</span>):
+        super().__init__()
+        self.backbone, feat_dim = build_backbone(backbone)
+        <span class="cm"># head base: una capa oculta y salida a `dim`</span>
+        self.head = nn.Sequential(
+            nn.Linear(feat_dim, <span class="nu">512</span>),
+            nn.BatchNorm1d(<span class="nu">512</span>),
+            nn.ReLU(inplace=<span class="kw">True</span>),
+            nn.Linear(<span class="nu">512</span>, dim),
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        z = self.head(self.backbone(x))
+        <span class="cm"># sin esta línea, nada de lo demás funciona</span>
+        <span class="kw">return</span> F.normalize(z, p=<span class="nu">2</span>, dim=<span class="nu">1</span>)</pre>
+      <div class="vlist">
+        <table>
+          <thead><tr><th style="width:38%">Backbone</th><th>Para quién</th></tr></thead>
+          <tbody>
+            <tr><td class="k"><code>small_cnn</code></td><td>28×28 en gris. Corre en CPU. El de MNIST y Omniglot.</td></tr>
+            <tr><td class="k"><code>resnet18</code></td><td>Preentrenada. La opción por defecto si hay GPU o Mac con MPS.</td></tr>
+            <tr><td class="k"><code>mobilenet_v3_small</code></td><td>Ligera y preentrenada. El punto medio.</td></tr>
+          </tbody>
+        </table>
+        <div class="card flat">
+          <p class="small" style="color:var(--ink-soft)"><strong>Se vale cambiar el head.</strong> Ponerle 3 o 4 capas es un extra válido — pero repórtenlo con la ablación, porque casi siempre <em>no</em> ayuda, y descubrir eso vale más que el punto.</p>
+        </div>
+        <div class="card flat">
+          <p class="small" style="color:var(--ink-soft)"><strong>Ojo con BatchNorm:</strong> con batches muy chicos se vuelve inestable. Si tienen que bajar a <code>batch_size=8</code>, cámbienlo por <code>nn.LayerNorm</code>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CODIGO: ARCFACE ============ -->
+<section class="slide" data-sec="Sesión 2 · El código" data-title="ArcFace en código">
+  <div class="head">
+    <p class="eyebrow">El código · 3 de 4</p>
+    <h2>ArcFace: la lámina de la sesión 1, en 12 líneas</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2" style="align-items:start">
+<pre><span class="kw">class</span> <span class="fn">ArcFace</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, dim, n_classes, s=<span class="nu">30.0</span>, m=<span class="nu">0.4</span>):
+        super().__init__()
+        <span class="cm"># cada fila es el centro de una clase en la esfera</span>
+        self.W = nn.Parameter(torch.randn(n_classes, dim))
+        nn.init.xavier_normal_(self.W)
+        self.s, self.m = s, m
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, z, labels):
+        <span class="cm"># z ya viene normalizado; normalizamos también W</span>
+        cos = F.linear(z, F.normalize(self.W, dim=<span class="nu">1</span>))
+        <span class="cm"># clamp: evita NaN en acos cuando cos roza ±1</span>
+        theta = torch.acos(cos.clamp(-<span class="nu">1</span> + <span class="nu">1e-7</span>, <span class="nu">1</span> - <span class="nu">1e-7</span>))
+        <span class="cm"># el margen se suma SOLO en la clase correcta</span>
+        target = F.one_hot(labels, cos.size(<span class="nu">1</span>)).bool()
+        logits = torch.where(target, torch.cos(theta + self.m), cos)
+        <span class="kw">return</span> F.cross_entropy(self.s * logits, labels)</pre>
+      <div class="vlist">
+        <div class="card">
+          <h3>Lo que hay que ver</h3>
+          <ul class="ticks" style="font-size:15.5px;gap:9px;margin-top:8px">
+            <li><code>W</code> tiene una fila por clase de <strong>entrenamiento</strong>. Es lo que se descarta al terminar.</li>
+            <li>El margen entra <strong>solo en la columna correcta</strong>; las demás quedan con su coseno.</li>
+            <li>Al final es un <code>cross_entropy</code> común. Por eso entrena tan estable.</li>
+          </ul>
+        </div>
+        <div class="card flat">
+          <p class="small" style="color:var(--ink-soft)"><strong>El <code>clamp</code> no es adorno.</strong> Sin él, <code>acos(1.0)</code> produce gradiente infinito y la pérdida se vuelve NaN a las pocas épocas. Es el bug más reportado de esta capa.</p>
+        </div>
+        <div class="card flat">
+          <p class="small" style="color:var(--ink-soft)">Con <code>m = 0</code> esto es un softmax coseno normal. Buena ablación de un minuto para ver cuánto aporta el margen.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes">Vale la pena correr la ablación m=0 en vivo si da tiempo. Ver el recall subir al meter margen convence más que la fórmula.</div>
+</section>
+
+<!-- ============ CODIGO: EVALUACION ============ -->
+<section class="slide" data-sec="Sesión 2 · El código" data-title="La evaluación congelada">
+  <div class="head">
+    <p class="eyebrow">El código · 4 de 4</p>
+    <h2>La evaluación es idéntica para todos</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2" style="align-items:start">
+<pre><span class="kw">def</span> <span class="fn">evaluate</span>(model, gallery, query, device):
+    zg, yg = embed_all(model, gallery, device)
+    zq, yq = embed_all(model, query, device)
+
+    <span class="cm"># todo normalizado ⇒ el producto punto ES el coseno</span>
+    sim = zq @ zg.T                      <span class="cm"># (Nq, Ng)</span>
+
+    <span class="cm"># una query nunca puede recuperarse a sí misma</span>
+    sim[same_image_mask(query, gallery)] = -<span class="nu">2</span>
+
+    order = sim.argsort(dim=<span class="nu">1</span>, descending=<span class="kw">True</span>)
+    hits  = yg[order] == yq[:, <span class="kw">None</span>]
+
+    <span class="kw">return</span> {
+        <span class="st">"recall@1"</span>: hits[:, :<span class="nu">1</span>].any(<span class="nu">1</span>).float().mean(),
+        <span class="st">"recall@5"</span>: hits[:, :<span class="nu">5</span>].any(<span class="nu">1</span>).float().mean(),
+        <span class="st">"mAP"</span>:      mean_average_precision(hits),
+        <span class="st">"tar@far=1e-2"</span>: tar_at_far(zq, yq, far=<span class="nu">1e-2</span>),
+    }</pre>
+      <div class="vlist">
+        <div class="card" style="border-color:var(--green);border-width:1.5px">
+          <h3>Regla del curso</h3>
+          <p class="small" style="color:var(--ink-soft)">Este archivo no se toca. Ni para “mejorarlo”, ni para “adaptarlo a mi dataset”. Si creen que tiene un bug, díganmelo y lo arreglo <strong>para todos</strong>.</p>
+        </div>
+        <div class="card flat">
+          <h3>Por qué importa tanto</h3>
+          <p class="small" style="color:var(--ink-soft)">En la sesión 3 vamos a poner sus números en la misma tabla. Si cada quien mide a su manera, la tabla es decorativa y la sesión se vuelve una serie de anécdotas.</p>
+        </div>
+        <div class="card flat">
+          <p class="small" style="color:var(--ink-soft)">Fíjense en la línea del <code>-2</code>: es la implementación de “la query no cuenta como su propio acierto”. Sin ella todos los recall dan casi 1.0.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RECESO S2 ============ -->
+<section class="slide pausa" data-sec="Sesión 2" data-title="Receso" data-nonum>
+  <div class="inner">
+    <p class="eyebrow" style="color:var(--green-ink)">A la mitad</p>
+    <h1>Receso</h1>
+    <p class="lede" style="text-align:center;margin-top:8px">5 minutos. Al volver: los datos, que es donde se gana el ejercicio.</p>
+  </div>
+</section>
+
+<!-- ============ DATOS 1 ============ -->
+<section class="slide" data-sec="Sesión 2 · Los datos" data-title="Una carpeta por identidad">
+  <div class="head">
+    <p class="eyebrow">Los datos · 1 de 4</p>
+    <h2>Una carpeta por identidad. No por clase.</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2" style="align-items:start">
+<pre>data/mi_dataset/
+├── id_00001/
+│   ├── 0001.jpg
+│   ├── 0002.jpg
+│   └── 0003.jpg
+├── id_00002/
+│   ├── 0001.jpg
+│   └── 0002.jpg
+├── id_00003/
+│   └── 0001.jpg     <span class="cm"># una sola: solo sirve en query</span>
+└── ...</pre>
+      <div class="vlist">
+        <ul class="ticks">
+          <li>El nombre de la carpeta <strong>es</strong> la identidad. El código no necesita ningún CSV.</li>
+          <li>Una identidad con <strong>una sola imagen</strong> no puede estar en entrenamiento: no hay par positivo que aprender.</li>
+          <li>El número entero de la clase se asigna al vuelo y solo existe durante el entrenamiento. En inferencia nunca reaparece.</li>
+        </ul>
+        <div class="card flat">
+          <p class="small" style="color:var(--ink-soft)"><strong>Si su dataset no viene así</strong>, el primer trabajo del equipo es convertirlo. Ese script de conversión es parte del entregable y suele ser donde se descubren los problemas reales de los datos.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes">Insiste en la distinción identidad vs clase. “Perro” es una clase; “Firulais” es una identidad. Casi todos los datasets públicos están organizados por clase.</div>
+</section>
+
+<!-- ============ DATOS 2 ============ -->
+<section class="slide" data-sec="Sesión 2 · Los datos" data-title="El split open-set">
+  <div class="head">
+    <p class="eyebrow">Los datos · 2 de 4</p>
+    <h2>El split: primero identidades, después imágenes</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2" style="align-items:start">
+      <div class="vlist">
+        <figure>
+          <svg viewBox="0 0 480 220" role="img" aria-label="Las identidades se reparten primero: unas van completas a entrenamiento y otras a prueba; después, dentro de las identidades de prueba, sus imágenes se reparten entre galería y consultas.">
+            <text x="16" y="16" font-size="12.5" font-weight="600" fill="currentColor" opacity=".7">1 · repartir IDENTIDADES</text>
+            <rect x="16" y="26" width="200" height="52" rx="7" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.6"/>
+            <text x="116" y="48" text-anchor="middle" font-size="13" font-weight="600" fill="var(--c-pos)">train · 70% de las ids</text>
+            <text x="116" y="67" text-anchor="middle" font-size="11.5" fill="var(--c-pos)" opacity=".85">todas sus imágenes</text>
+            <rect x="230" y="26" width="234" height="52" rx="7" fill="var(--c-neg-soft)" stroke="var(--c-5)" stroke-width="1.6"/>
+            <text x="347" y="48" text-anchor="middle" font-size="13" font-weight="600" fill="var(--c-5)">test · 30% de las ids</text>
+            <text x="347" y="67" text-anchor="middle" font-size="11.5" fill="var(--c-5)" opacity=".9">jamás vistas al entrenar</text>
+            <path d="M 347 84 L 347 104" stroke="var(--c-5)" stroke-width="1.8" fill="none"/>
+            <text x="16" y="126" font-size="12.5" font-weight="600" fill="currentColor" opacity=".7">2 · dentro de test, repartir IMÁGENES</text>
+            <rect x="230" y="136" width="112" height="52" rx="7" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.4"/>
+            <text x="286" y="158" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">galería</text>
+            <text x="286" y="176" text-anchor="middle" font-size="11" fill="currentColor" opacity=".65">1–2 por id</text>
+            <rect x="352" y="136" width="112" height="52" rx="7" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.4"/>
+            <text x="408" y="158" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">queries</text>
+            <text x="408" y="176" text-anchor="middle" font-size="11" fill="currentColor" opacity=".65">el resto</text>
+            <text x="116" y="164" text-anchor="middle" font-size="12" fill="var(--c-pos)" opacity=".8">(train no se subdivide)</text>
+            <text x="240" y="212" font-size="12" fill="var(--c-5)" font-weight="600">Nunca al revés: repartir imágenes primero es la fuga.</text>
+          </svg>
+        </figure>
+      </div>
+      <div class="vlist">
+<pre><span class="kw">def</span> <span class="fn">make_open_set_split</span>(
+    root: Path,
+    test_frac: float = <span class="nu">0.3</span>,
+    min_images: int = <span class="nu">2</span>,
+    seed: int = <span class="nu">0</span>,
+) -&gt; Split:
+    <span class="st">"""Reparte IDENTIDADES, no imágenes.
+
+    Ninguna identidad puede aparecer en train
+    y en test a la vez.
+    """</span>
+    <span class="todo">...</span>  <span class="cm"># ← su trabajo</span></pre>
+        <div class="card">
+          <h3>La prueba que tiene que pasar</h3>
+          <p class="small" style="color:var(--ink-soft)">El repo trae un test que falla si <code>set(train_ids) &amp; set(test_ids)</code> no está vacío. Si ese test pasa, ya libraron el error más caro del curso.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DATOS 3 ============ -->
+<section class="slide" data-sec="Sesión 2 · Los datos" data-title="Balance y ruido">
+  <div class="head">
+    <p class="eyebrow">Los datos · 3 de 4</p>
+    <h2>Cuántas imágenes, y qué tan sucias</h2>
+  </div>
+  <div class="fill">
+    <table>
+      <thead><tr><th style="width:26%">Situación</th><th style="width:32%">Qué pasa</th><th>Qué hacer</th></tr></thead>
+      <tbody>
+        <tr><td class="k">1 imagen por identidad</td><td>No hay nada que acercar. La identidad no aporta señal de entrenamiento.</td><td>Sácala de train. Sirve como query en evaluación.</td></tr>
+        <tr><td class="k">2–5 imágenes</td><td>El caso normal y suficiente.</td><td>Nada. Es el régimen para el que sirve este método.</td></tr>
+        <tr><td class="k">Una identidad con 500 y el resto con 3</td><td>ArcFace sobreajusta el centro de la clase gorda y la ignora en el resto.</td><td>Trunca a un máximo por identidad, o usa un sampler balanceado <em>(extra)</em>.</td></tr>
+        <tr><td class="k">Etiquetas mal puestas</td><td>Dos identidades distintas bajo la misma carpeta. Envenena el centro de esa clase.</td><td>Entrena una vez, ordena por pérdida y revisa a mano las 50 peores. <strong>Sorprende lo que aparece.</strong></td></tr>
+        <tr><td class="k">Duplicados exactos</td><td>La misma foto en galería y en query infla el recall sin que nadie lo note.</td><td>Hash de la imagen antes de partir. Dos líneas, mucho dolor evitado.</td></tr>
+      </tbody>
+    </table>
+    <div class="card flat" style="margin-top:20px">
+      <p class="body" style="max-width:none">Este es el trabajo del ejercicio. <strong>Mover un hiperparámetro cambia el tercer decimal; arreglar los datos cambia el primero.</strong></p>
+    </div>
+  </div>
+  <div class="notes">Lo de ordenar por pérdida y revisar a mano las peores es el consejo más útil de toda la sesión. Vale la pena contarlo como anécdota de proyecto real.</div>
+</section>
+
+<!-- ============ DATOS 4 ============ -->
+<section class="slide" data-sec="Sesión 2 · Los datos" data-title="Augmentations">
+  <div class="head">
+    <p class="eyebrow">Los datos · 4 de 4</p>
+    <h2>La augmentation tiene que preservar la identidad</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2">
+      <div class="card">
+        <span class="tag pos">Casi siempre ayudan</span>
+        <ul class="ticks pro" style="margin-top:14px">
+          <li><code>RandomResizedCrop</code> suave (escala 0.7–1.0). Enseña que el encuadre no define la identidad.</li>
+          <li><code>ColorJitter</code> moderado: la iluminación cambia, la identidad no.</li>
+          <li><code>RandomHorizontalFlip</code> — <strong>si</strong> tu dominio es simétrico.</li>
+          <li>Desenfoque o ruido leve, para acercarte a la cámara real de producción.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag neg">Destruyen la identidad</span>
+        <ul class="ticks con" style="margin-top:14px">
+          <li><code>RandomHorizontalFlip</code> en texto, dígitos o letras: <strong>una “b” volteada es una “d”</strong>.</li>
+          <li>Recortes agresivos que se comen justo el rasgo que distingue.</li>
+          <li>Escala de grises cuando el color <em>es</em> la identidad (productos, especies).</li>
+          <li>Rotaciones grandes en dominios con orientación fija: caras, documentos.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="cols c2" style="margin-top:20px">
+      <div class="card flat">
+        <p class="small" style="color:var(--ink-soft)"><strong>La regla:</strong> si un humano ya no puede decir que son la misma identidad, la red tampoco, y le estás enseñando ruido.</p>
+      </div>
+      <div class="card flat">
+        <p class="small" style="color:var(--ink-soft)"><strong>Y en evaluación, ninguna.</strong> Galería y queries se procesan igual y en modo determinista, o los números dejan de ser reproducibles.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EJERCICIO 1 ============ -->
+<section class="slide" data-sec="Sesión 2 · El ejercicio" data-title="Qué tienen que implementar">
+  <div class="head">
+    <p class="eyebrow">El ejercicio · 1 de 4</p>
+    <h2>Tres funciones y un dataset</h2>
+  </div>
+  <div class="fill">
+    <div class="vlist" style="gap:14px">
+      <div class="cols c3" style="gap:18px">
+        <div class="card">
+          <span class="tag neg">~40 líneas</span>
+          <h3 style="margin-top:12px"><code>IdentityImageDataset</code></h3>
+          <p class="small" style="color:var(--ink-soft)">Recorre las carpetas, arma la lista de <code>(ruta, id)</code>, asigna el entero de clase y devuelve el tensor transformado.</p>
+        </div>
+        <div class="card">
+          <span class="tag neg">~30 líneas</span>
+          <h3 style="margin-top:12px"><code>make_open_set_split</code></h3>
+          <p class="small" style="color:var(--ink-soft)">Reparte identidades entre train y test, y dentro de test separa galería y queries. Sin fuga.</p>
+        </div>
+        <div class="card">
+          <span class="tag neg">~15 líneas</span>
+          <h3 style="margin-top:12px"><code>build_transforms</code></h3>
+          <p class="small" style="color:var(--ink-soft)">Una política para entrenar y otra determinista para evaluar. Justificada para <em>su</em> dominio.</p>
+        </div>
+      </div>
+      <div class="card" style="border-color:var(--green);border-width:1.5px">
+        <h3>Y el trabajo de verdad: los datos</h3>
+        <p class="body" style="max-width:none">Elegir el dataset, convertirlo a carpeta-por-identidad, mirarlo, limpiarlo, decidir cuántas imágenes por identidad y qué augmentations tienen sentido. <strong>Son 85 líneas de código y una semana de decisiones sobre datos.</strong> Esa proporción es a propósito.</p>
+      </div>
+      <div class="cols c2" style="gap:18px">
+        <div class="card flat"><p class="small" style="color:var(--ink-soft)"><strong>Todos corren MNIST</strong> (entrenar con 0–7, evaluar con 8–9). Es el piso común y la única columna comparable entre equipos.</p></div>
+        <div class="card flat"><p class="small" style="color:var(--ink-soft)"><strong>Y todos corren un segundo dataset</strong>, elegido por el equipo. Ahí es donde se ponen interesantes las diferencias.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EJERCICIO 2 ============ -->
+<section class="slide" data-sec="Sesión 2 · El ejercicio" data-title="Datasets sugeridos">
+  <div class="head">
+    <p class="eyebrow">El ejercicio · 2 de 4</p>
+    <h2>Cinco opciones. O la suya.</h2>
+  </div>
+  <div class="fill">
+    <table>
+      <thead><tr><th style="width:6%"></th><th style="width:20%">Dataset</th><th style="width:38%">Cómo se parte en open-set</th><th>Peso</th></tr></thead>
+      <tbody>
+        <tr><td class="k num-col">1</td><td class="k">MNIST / Fashion-MNIST <span class="tag" style="margin-left:6px">obligatorio</span></td><td>Entrenar con los dígitos 0–7, evaluar con 8–9. Variante: entrenar con MNIST y evaluar con letras de EMNIST.</td><td>Corre en CPU en minutos.</td></tr>
+        <tr><td class="k num-col">2</td><td class="k">Omniglot</td><td>1 623 caracteres de 50 alfabetos, 20 imágenes cada uno. Se reservan alfabetos completos para test.</td><td>Muy ligero. 105×105 en gris.</td></tr>
+        <tr><td class="k num-col">3</td><td class="k">Sintético del repo</td><td><code>make_synthetic.py</code>: glifos generados con variación controlada. Ustedes eligen cuántas identidades, cuánta variación y cuánto ruido.</td><td>Se genera en segundos.</td></tr>
+        <tr><td class="k num-col">4</td><td class="k">CIFAR-100</td><td>Entrenar con 80 clases, evaluar con las 20 restantes.</td><td>32×32. Ligero.</td></tr>
+        <tr><td class="k num-col">5</td><td class="k">CUB-200-2011</td><td>El benchmark clásico: aves 1–100 para entrenar, 101–200 para evaluar.</td><td>Pide GPU. 224×224.</td></tr>
+      </tbody>
+    </table>
+    <div class="card flat" style="margin-top:20px">
+      <p class="body" style="max-width:none"><strong>Pueden traer otro</strong>, con una condición: que se pueda definir un split por identidad sin fuga. Si no logran explicar cuál es la identidad en su dataset, ése no es el dataset.</p>
+    </div>
+  </div>
+  <div class="notes">El sintético es el que más enseña: al controlar la variación intra-clase pueden hacer ablaciones limpias que con datos reales son imposibles. Empújalo con los equipos fuertes.</div>
+</section>
+
+<!-- ============ EJERCICIO 3 ============ -->
+<section class="slide" data-sec="Sesión 2 · El ejercicio" data-title="Puntos extra">
+  <div class="head">
+    <p class="eyebrow">El ejercicio · 3 de 4</p>
+    <h2>Puntos extra · máximo 2 por equipo</h2>
+  </div>
+  <div class="fill">
+    <table>
+      <thead><tr><th style="width:34%">Extra</th><th style="width:14%">Dificultad</th><th>Qué tienen que mostrar</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Triplet loss con batch-hard</td><td>Media</td><td>La comparación contra ArcFace en el mismo dataset. Digan también cuánto código extra costó.</td></tr>
+        <tr><td class="k">CosFace</td><td>Baja</td><td>Ambas curvas y una lectura de si la diferencia es real o ruido entre corridas.</td></tr>
+        <tr><td class="k">Sampler balanceado por clase</td><td>Media</td><td>Un dataset desbalanceado a propósito, con y sin sampler.</td></tr>
+        <tr><td class="k">Fine-tuning por capas</td><td>Media</td><td>Backbone congelado vs. últimas capas vs. todo. Incluyan el tiempo de entrenamiento.</td></tr>
+        <tr><td class="k">Ablación del head y la dimensión</td><td>Baja</td><td>Al menos tres configuraciones. Reporten también las que empeoraron.</td></tr>
+        <tr><td class="k">Baseline DINOv2 congelado</td><td>Baja</td><td>Sin entrenar nada. Si le gana a su modelo, eso <em>también</em> es un resultado.</td></tr>
+        <tr><td class="k">Índice FAISS o HNSW</td><td>Baja</td><td>Latencia y recall del índice contra fuerza bruta.</td></tr>
+      </tbody>
+    </table>
+    <p class="small" style="margin-top:20px;text-align:center">Cuentan <strong>dos como máximo</strong>. Preferimos dos bien explicados que seis mencionados de pasada.</p>
+  </div>
+</section>
+
+<!-- ============ EJERCICIO 4 ============ -->
+<section class="slide" data-sec="Sesión 2 · El ejercicio" data-title="Entregables y calificación">
+  <div class="head">
+    <p class="eyebrow">El ejercicio · 4 de 4</p>
+    <h2>Qué entregan y cómo se califica</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2" style="align-items:start">
+      <div class="vlist">
+        <div class="card">
+          <h3>Entregables</h3>
+          <ul class="ticks" style="margin-top:10px;font-size:16px">
+            <li>El repo con <code>data.py</code> completo y su script de conversión.</li>
+            <li>La salida de <code>evaluate.py</code> para MNIST y para su dataset.</li>
+            <li>Presentación de <strong>20 minutos</strong> el día de la sesión 3.</li>
+          </ul>
+        </div>
+        <div class="card flat">
+          <h3>Fecha</h3>
+          <p class="small" style="color:var(--ink-soft)">Una semana. Suban el repo la noche anterior a la sesión 3 para poder armar la tabla comparativa antes de clase.</p>
+        </div>
+      </div>
+      <div class="vlist">
+        <div class="card">
+          <h3>Calificación</h3>
+          <table style="margin-top:10px">
+            <tbody>
+              <tr><td class="k" style="width:22%">50%</td><td>Resultado técnico: que corra, que el split sea correcto, que los números sean creíbles.</td></tr>
+              <tr><td class="k">50%</td><td>Presentación: qué probaron, qué falló y qué concluyen.</td></tr>
+              <tr><td class="k">+2</td><td>Hasta dos puntos extra, uno por cada cosa adicional.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card" style="border-color:var(--green);border-width:1.5px">
+          <p class="body" style="max-width:none"><strong>Un modelo con malos números y un buen análisis saca 8.</strong> Un modelo con buenos números que nadie sabe explicar, no. Lo que se evalúa es el criterio, no el recall.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes">Dilo explícitamente: no es una competencia de recall. Un equipo con un dataset difícil y buen análisis va a sacar más que uno con MNIST y suerte.</div>
+</section>
+
+<!-- ============ ARRANQUE ============ -->
+<section class="slide" data-sec="Sesión 2 · Arranque" data-title="Antes de irse">
+  <div class="head">
+    <p class="eyebrow">Últimos 10 minutos</p>
+    <h2>Nadie se va sin haber corrido una época</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2" style="align-items:center">
+<pre>git clone git@github.com:felipegerard/intro-to-embeddings.git
+cd intro-to-embeddings
+
+python -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -e .
+
+<span class="cm"># genera el dataset sintético (segundos)</span>
+python scripts/make_synthetic.py --out data/synthetic
+
+<span class="cm"># entrena con la solución de referencia de data.py</span>
+python scripts/run_train.py --config configs/mnist.yaml</pre>
+      <div class="vlist">
+        <ul class="ticks">
+          <li>Que <strong>al menos una máquina por equipo</strong> llegue hasta el final de una época hoy.</li>
+          <li>Si truena por memoria: bajen <code>batch_size</code> y <code>image_size</code> en el YAML.</li>
+          <li>En Mac se usa <code>mps</code>; si algún operador no está soportado, <code>--device cpu</code> y sigan.</li>
+        </ul>
+        <div class="card flat">
+          <p class="small" style="color:var(--ink-soft)">Los problemas de entorno resueltos hoy en clase son cuatro días que no pierden en la semana. Aprovechen que estamos todos aquí.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes">Reserva de verdad estos 10 minutos. Es lo que más impacto tiene en que la semana del ejercicio no se vaya en instalar cosas.</div>
+</section>
+
+<!-- ============ DIVISOR S3 ============ -->
+<section class="slide divider" data-sec="Sesión 3 · Presentaciones" data-title="Divisor — Sesión 3" data-nonum>
+  <svg class="arcmark" viewBox="0 0 200 200" aria-hidden="true" fill="none" stroke="currentColor">
+    <circle cx="100" cy="100" r="86" stroke-width="1.2"/>
+    <circle cx="100" cy="100" r="60" stroke-width="1.2" stroke-dasharray="3 6"/>
+    <line x1="100" y1="100" x2="174" y2="56" stroke-width="1.6"/>
+    <line x1="100" y1="100" x2="152" y2="170" stroke-width="1.6"/>
+    <path d="M 148 74 A 60 60 0 0 1 130 143" stroke-width="2.4"/>
+  </svg>
+  <div class="inner">
+    <p class="num">03</p>
+    <p class="eyebrow">Sesión 3 · 2 horas</p>
+    <h1>Presentaciones</h1>
+    <div class="plan">
+      <span>1:20 · Presentaciones por equipo</span><span>0:05 · Receso</span>
+      <span>0:20 · Comparación cruzada</span><span>0:15 · Cierre y Q&amp;A</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FORMATO ============ -->
+<section class="slide" data-sec="Sesión 3 · Presentaciones" data-title="Qué queremos en 20 minutos">
+  <div class="head">
+    <p class="eyebrow">Formato</p>
+    <h2>Qué queremos oír en 20 minutos</h2>
+  </div>
+  <div class="fill">
+    <table>
+      <thead><tr><th style="width:11%">Tiempo</th><th style="width:26%">Bloque</th><th>Lo que de verdad nos interesa</th></tr></thead>
+      <tbody>
+        <tr><td class="k num-col">4 min</td><td class="k">Su dataset</td><td>Qué es una identidad ahí, cuántas hay, cuántas imágenes por identidad, y qué encontraron al mirarlo de cerca.</td></tr>
+        <tr><td class="k num-col">4 min</td><td class="k">Sus decisiones</td><td>El split, las augmentations, el backbone. <strong>Por qué</strong> cada una, no solo cuál.</td></tr>
+        <tr><td class="k num-col">5 min</td><td class="k">Resultados</td><td>MNIST y su dataset, con la misma métrica de todos. Curvas de entrenamiento incluidas.</td></tr>
+        <tr><td class="k num-col">4 min</td><td class="k">Qué falló</td><td>El bloque más valioso. Qué probaron que no funcionó y qué creen que pasó.</td></tr>
+        <tr><td class="k num-col">3 min</td><td class="k">Preguntas</td><td>Del grupo y nuestras.</td></tr>
+      </tbody>
+    </table>
+    <div class="cols c2" style="margin-top:22px">
+      <div class="card flat"><p class="small" style="color:var(--ink-soft)"><strong>No hace falta introducción teórica.</strong> Todos vimos la sesión 1. Empiecen directo en su dataset.</p></div>
+      <div class="card flat"><p class="small" style="color:var(--ink-soft)"><strong>Pocas láminas, muchas imágenes.</strong> Enséñennos ejemplos reales de sus datos y de sus errores: los vecinos más cercanos que salieron mal dicen más que cualquier tabla.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TABLA COMPARATIVA ============ -->
+<section class="slide" data-sec="Sesión 3 · Comparación" data-title="Tabla comparativa (en vivo)">
+  <div class="head">
+    <p class="eyebrow">Comparación cruzada</p>
+    <h2>Todos los equipos en una tabla</h2>
+  </div>
+  <div class="fill">
+    <table>
+      <thead><tr>
+        <th style="width:13%">Equipo</th><th style="width:18%">Dataset propio</th>
+        <th style="width:11%">Backbone</th><th style="width:9%">Dim</th>
+        <th style="width:12%">R@1 MNIST</th><th style="width:12%">R@1 propio</th><th>Extras</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="k">1</td><td colspan="6" style="color:var(--ink-faint)">se llena en clase</td></tr>
+        <tr><td class="k">2</td><td colspan="6" style="color:var(--ink-faint)">&nbsp;</td></tr>
+        <tr><td class="k">3</td><td colspan="6" style="color:var(--ink-faint)">&nbsp;</td></tr>
+        <tr><td class="k">4</td><td colspan="6" style="color:var(--ink-faint)">&nbsp;</td></tr>
+      </tbody>
+    </table>
+    <div class="cols c2" style="margin-top:24px">
+      <div class="card">
+        <h3>La columna que compara</h3>
+        <p class="small" style="color:var(--ink-soft)"><strong>R@1 en MNIST</strong> es la única cifra comparable entre equipos: mismo dataset, mismo split, misma evaluación. Si a alguien le sale muy baja, el problema está en su código, no en sus datos.</p>
+      </div>
+      <div class="card">
+        <h3>La columna que no compara</h3>
+        <p class="small" style="color:var(--ink-soft)"><strong>R@1 en su dataset</strong> no se puede comparar entre equipos: distinto número de identidades, distinta dificultad, distinto tamaño de galería. Sirve para hablar de <em>por qué</em>, no de quién ganó.</p>
+      </div>
+    </div>
+  </div>
+  <div class="notes">Llena esta tabla antes de clase con los repos que suban la noche anterior. Proyectarla completa desde el arranque del bloque cambia por completo la conversación.</div>
+</section>
+
+<!-- ============ QUE BUSCAMOS ============ -->
+<section class="slide" data-sec="Sesión 3 · Comparación" data-title="Las preguntas del cierre">
+  <div class="head">
+    <p class="eyebrow">Comparación cruzada</p>
+    <h2>Las cuatro preguntas que vamos a hacernos</h2>
+  </div>
+  <div class="fill">
+    <div class="vlist" style="gap:14px">
+      <div class="card"><p class="body" style="max-width:none"><strong>1 · ¿Las diferencias vienen de los datos o de los hiperparámetros?</strong><br><span class="small">Si dos equipos con el mismo backbone tienen resultados muy distintos en MNIST, la respuesta está en el split o en las augmentations.</span></p></div>
+      <div class="card"><p class="body" style="max-width:none"><strong>2 · ¿A quién le ganó DINOv2 congelado?</strong><br><span class="small">Si un modelo preentrenado sin entrenamiento le gana a un modelo propio, hay que preguntarse qué aportó el entrenamiento.</span></p></div>
+      <div class="card"><p class="body" style="max-width:none"><strong>3 · ¿Quién tuvo el dataset más difícil, y cómo lo sabemos?</strong><br><span class="small">Número de identidades, imágenes por identidad, variación intra-clase. Un recall bajo en un problema difícil vale más que uno alto en MNIST.</span></p></div>
+      <div class="card"><p class="body" style="max-width:none"><strong>4 · ¿Qué habrían hecho distinto con otra semana?</strong><br><span class="small">Casi siempre la respuesta es “mirar los datos antes”. Que salga de ustedes.</span></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LO QUE NO CUBRIMOS ============ -->
+<section class="slide" data-sec="Sesión 3 · Cierre" data-title="Lo que no cubrimos">
+  <div class="head">
+    <p class="eyebrow">Cierre</p>
+    <h2>Por dónde seguir</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2">
+      <div class="vlist">
+        <div class="card">
+          <h3>Multimodal</h3>
+          <p class="small" style="color:var(--ink-soft)">CLIP y sus descendientes ponen imágenes y texto en el <em>mismo</em> espacio. Buscar fotos escribiendo, clasificar sin ejemplos. Todo lo de hoy aplica; solo cambia de dónde vienen los pares.</p>
+        </div>
+        <div class="card">
+          <h3>Autosupervisado</h3>
+          <p class="small" style="color:var(--ink-soft)">SimCLR, DINO: los positivos son dos augmentations de la misma imagen, sin etiquetas. Ahí el diseño de augmentations no es un detalle, <strong>es el modelo entero</strong>.</p>
+        </div>
+      </div>
+      <div class="vlist">
+        <div class="card">
+          <h3>Escala</h3>
+          <p class="small" style="color:var(--ink-soft)">Con millones de identidades, la matriz de ArcFace no cabe en memoria: softmax parcial, clases en shards, o de vuelta a las pérdidas por pares. El problema del muestreo regresa por otra puerta.</p>
+        </div>
+        <div class="card">
+          <h3>Destilación y cuantización</h3>
+          <p class="small" style="color:var(--ink-soft)">Meter el modelo en un teléfono o en una cámara: embeddings de 64 dimensiones en int8, con una caída de recall que hay que medir, no suponer.</p>
+        </div>
+      </div>
+    </div>
+    <p class="body" style="margin:24px auto 0;text-align:center;max-width:76ch">Todo lo anterior se apoya en lo mismo que vimos: <strong>un vector normalizado, un coseno y un umbral que alguien tiene que elegir.</strong></p>
+  </div>
+</section>
+
+<!-- ============ GRACIAS ============ -->
+<section class="slide cover" data-sec="Maestría en Ciencia de Datos" data-title="Gracias" data-nonum>
+  <svg class="arcmark" viewBox="0 0 200 200" aria-hidden="true" fill="none" stroke="currentColor">
+    <circle cx="100" cy="100" r="86" stroke-width="1.2"/>
+    <circle cx="100" cy="100" r="60" stroke-width="1.2" stroke-dasharray="3 6"/>
+    <line x1="100" y1="100" x2="174" y2="56" stroke-width="1.6"/>
+    <line x1="100" y1="100" x2="152" y2="170" stroke-width="1.6"/>
+    <path d="M 148 74 A 60 60 0 0 1 130 143" stroke-width="2.4"/>
+    <circle cx="174" cy="56" r="5" fill="currentColor" stroke="none"/>
+    <circle cx="152" cy="170" r="5" fill="currentColor" stroke="none"/>
+  </svg>
+  <div class="inner">
+    <p class="eyebrow">Fin</p>
+    <h1>Gracias</h1>
+    <p class="lede" style="margin-top:20px">Código y láminas: <span style="color:#fff">github.com/felipegerard/intro-to-embeddings</span></p>
+    <div class="meta">
+      <div><dt>Código</dt><dd>MIT</dd></div>
+      <div><dt>Material</dt><dd>CC BY-NC-ND 4.0</dd></div>
+    </div>
+  </div>
+</section>
+</template>
+
+<script>
+const LOGO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAaQAAABACAYAAABV7gMVAAAl/UlEQVR42u2de9ylU9nHv9fe+5kxJs04zWBSjCGK8qIDiqiQU1I66OSYSpFT5yIl9JacX1FRiSihyCGKDiJNhRAZZBwaxTibmWfv/Xv/WNcyy93e+9n3PjzPnnnu9fncn/3Mnr33Wvda617X6Xf9LpM0B1geEGC01+pAGbgV2MLM6pIMKJlZTdLRwLuAYf/c0tbk93W7me0AkLn/k4APAAuByoCM13w9/gX8DjjBzO6UVDazWtMvSiVf31WAA4A3AzOAZXLumSVxjQ14CvgbcIaZXRjX2szU1Y8n+yV5b13gtcAmwHrAqv5sTvSPDAPzgXnAP4A/AdcDN8XxSCoDMrN6TycjjLcM1NJ7lzQVeCnwCh/zLGBlYAXfI8v5R58CngUeBf4NzAFuA24G7jCzx0bqq2hLfzNJjwFTOvz+rcArGgiks4APjoP5u93MXtZAIMX7H+QD+1FgXzP7aRQ6LYTR5sD3gZnj/Hk5A/ioK2Tq9LBMlQBJqwLvBN4BbAxMyvlzi4BbgJ8B55jZXdk++iA4Xw5sA2wNbOiCs1PFswY8BPwFuBq4ysxuTecKqBeCaXy0ClD1gzOvhVTyzdSoDfvvVQfEQuh1i/e/qMX/D/L911yD/Ymk15nZddkDTFIpvGhN4BJgqt9PaSm2ilpZSwL2BZ40s0P8oKx1erhLmgYcBuzla5HdO3GOrcV4ACa4INsY+JSkc4CjzezuuIadHOYZQVSTtJILzt3diis32FMkY7YR5jK2MvAiv3byvn4HnA1cYGbzC8E0flop2TydXg0tr3F0sQTOQVREDDjGD5/sgx7dUp93YTTs3yuNs/U1v+eogH1C0nouVMp5Dngzk3/vvcBs4FAXRlX/bXk/5aTPZuMp+yUXYlVgWWAfYLakA82sbmZywZTXgotjXV3SMe4NOQXY3PtNx0wynvIIe6SU+WwUUjX/zTKwpVujf5N0uKRpZlbzeykXx/bSLZCKNn6tYwGbAmu6a66UHJ41ScsB2yUxs/HcLBEYO7awXpoKI0kVSd9y7f9FiXei4vNrHY6rlKxn1RWI4yWdL2lyurYjjTNaypJeKOlIQoznU8A0Fxq1Hoy50T2Uk3uI/awGHAHcLOkwSRPzKgJFKwRS0ZYsV1QFWCNzwMbXGJweyRocb21mTtcXkiYCFwIfcqFR97nv5bxaRjDtBlwpafmRhJLHC6NVtANwI/AFF261RCkp93kvWMb6qwLTga8B17mLuSapFOe2aIVAKtrS1SaOcEAUrYM5iXEY/+fZblmlrs9+jq/ifW0GXCBpyEFM1sRFV5c0QdKJhJjhOokFVx6jfZAVsBsB10j6dKfuyKIVAqloS4alVLQ+PF8OCvgCAUU3DAyNYv9D3udWwHE+llIjxJ+k1YBfAh93660fFly3gimO/2hJ50patl13ZNEKgVS0oo1fCb/4oN8Y+KIfpmOBuBxy6+Jjkt6UxmDcTVeT9DLgN8AWCZJyEM+GcoLifTdwmaSVCqFUCKSiFa1o7VmdX00OUusAnl9NgvxZZFteF+PXJFUczh/ddOsCVwBr9ShNIaL+4njTq5bA2ruxlqLltwVwuaQphVAqBFLRila05tZRXdJrCAmk9ZwoxXoSu6kkQf4U2VbPaVnUgf8BtvUkaEmaDlzGYsRfpQshFIVmCu2uZK4UEl7rULhmLb+NgZ+2ipEVjSUK+kufEkejVkSP0TfdjKne48TY2ijefyulojTglkJtFNZ3tPrJY5G8P7Nf8uwtCBRPVwP3+/urEnJ03uifyfu7RqC0utQFZp3A0tIprL+eQd9BoAeaA8wlMDA86u8vT4BxvxhYm5DQG1u1Q+BEzKfbGjjNzPZ2C7BK0QqBlLQXJFrRIFmDvT64pw7I/Q8qRZGSgDSjFPge0/nynKOqa+xvzOmJiALmDuDjZvbLBp85yi2vkwmcd+0KpXjgv8FdXI+b2b8l/RrYNaeFpIzV9yhwKQGddwNwXzNGBXerrUFA/70N2BaYzGIXZbmDM2wY2EvSjWZ2Wq9ok4q25AukuAmvINDqLOyBNhrdE6sB23dhzdxCIKIs9wBVFhFI9yW0BpIUf/cn/n/VPlovcoG4vWudgyaU4ngeI+Tf/KvJXET3zarAHl2s750+75UW6zsEvAp4fR/nKybQrkGIy7QbO0r36ZvM7GE/vLNzJjO7QdLWwOV+sLcjlOK4pgEvA/7g7//RBVLe+S67FXQy8EMze6CB4Enz15SQvt7t19mSZhH4AfcGXphYcpbzHKsD35R0rZnd3oyfsWgMvL/7EYVWV/ut5q83p9n9fR7nJh2MU5KG/fWopXT9Zki61+cl79zEddwu4QsjWdOZkhZ0MO9xLE9I2qjN+1hHnbWqv/4ox5ydmflu3r10mv9OpVH8yF/fkpnjdubraUe84RZWs/FX/HV1SfNzrH283/cnv7VjjnFWk3k4RtKK6X371TJh1dkgSs5aUU7eX0vSjxrszbz74Nf++wWbQ2EhPU87KvVIC42+8ild/s4kf5Bzk2K2utVGroEmmm1fWBbM7AFJlwP7DRCZa3Tn/N7M/uyHq1q4kmot3J/ttgltrG/ZLffT3Ror0b/40dQc8aMICT/PzG6TVDGz4aYdBJdgxczmSvoucHCbax/XYHry3kNtuhXj798N7Glmv0mEY61dF5m78qLL77lnxczmAO+W9CvgBELpijwxsrjubwDeY2Y/LFx3hUCKm65nAIIkn6PbjVX3Bxkz62vQs5f33wb3mA1wYuszfuDUmrlPFIIuvVhf+fqq2SHk/6ekr35a9ct3IMQuzeFpkH/2EhdIeYTrsjy/DEk1cXVaC2H0e+DtZjYvEUTVXjwr0cVnZqdLuhM4n0BdlUcoxWfhcEkXEEIGRaOAfRdtlNqA0/HbOPbjLyB/wufdvp71NgWwgHsTBgPlyG8iqadUb8N6uw7YIQojM6v2cu85FVBN0pCZXQO8hRB/zKNwRW/K2sDuBTt4IZCKVrSihTa/AyusE2uj2oGF/B+ejxQdGsH1eg+wi5k97h6Lah81mGEXSrMJbAzqIJlWwMdjDaViKxYCqWhFG68tHoD3JtaP2vzOS9wNl4e8deUcTBClzNgAVkysEGtQSG8YeK9DxCujEZNxoVQxsyuAzyWJve1amyJUsn1NYSUVAolxgEw0RxRVxvIC4muRnT54lEF3AfPaJK+Nh+0b3Q1mbRK3Cnidf77axrhKwDOEYnuxrcF/u/FS6+hrZvaH6KYbxXms+d4+lhC7ygNGivP5joKxvhBIS7MgKqXVNN2PPpbXAj8kFhSrw8DE9DwH5kkC00I7MaGo1b9P0nQHZ5RHQLFGzX/fNp/l6Pa6BXgggZVv1CLX6B4Cs3aph8jUPLHRGCc7KKElynOube/uv2pBKcS4ZmpYatmb/e9pwGuB9QiJhhrDejFVAtS1UDAGS9GrAz8C3t7G3ojJwSsRSnfv7AH+SgNh9hxqUdLXgfVzMBwYcEFM4vZD+vUNrIhoTR1nZk+PgXUUhVLNn7sbJV1MSOBt514jwGNtYF0XwmOORs2kwzyX9J8F/iR1tOoDDloqBNIYlxKYBRzqroAVC4u3aDR3NxnwC0LezpptHKTRJbWTpB8D+5vZw42sF0kTJX0FOKTNAzoqTE8AP0zojdYDNshw2cW/HwHO8fuojbWLHDjVBZLlQBJWgNe4QCqNJcAhYY6oN0mmlisZ5kKollBRqRBIRcsKoz2A41mcoFsfIATPoBOsMg7ddmUze0bSl4Ez29TOo1B6B7C5pNMJNFwP+vdXJJCr7uWCpF0W8Xg4n2pmD3o59YXAe1nMml3JfPZyM3t0AJJL4zP2WwI91Do5c5M2Ab491paRC5sZwJ7AS33+/wpcYmb3Zs6alYG9zOxY30vjRigVAqk9YXQI8HWez0xcCIGitTxIXfP9PoH1e+s22RTKCbff4X497f83OSNk8gije4BjfExVSVNYzB1YbpCke1kexF+fhXvFzBZJujqHQIrjXicj2MZKGG0JnOvrmrajJZ0HnGxmf5U0CfgW8DZJrwX2B/7lCf0qQA2FMNrRhVFtwMo6F23wE5bjtYdbOe2WRignJUzkgmhyohDlsYzKro2/x8weB6LF8xFgRgOwQOx7do4k3dFqv82BmrMESj8husPGSBitRSAYXpUAQKoT4PQLCZUB9gb+5AL3j86C/iywC/Bpd/WVC5TdOIZ1u4a7HHBK4oMv5qtoeWlxSmY2F9gZeDhhpm7n2awkwXglXo1Sm/DzyN33DmcIH3JLY1XgsAaWRhzXAyxmstcA5XbdmqN2UxQ+KxFYxMfqLKkA5xGopBYSOPpEcJVO9I8t9PFuTQCpLAQmEWidTornUSGQxm8ru3b4AUJph1oxV0XrEik2G3gT8JecND90UI4hKlBzgZ3M7JLIPSdpGUJMa4UmybAAD3j8a1BiF3EM/yLQCeURlJNYDECyMRr7D9wimujCaQNgK1+Hp/399HyZCDxFSEj+x3ii4CoO2dZcX+8d4OJ3RVuyhNIEM7uFALO+oY9xjZQpYkszu9JzjmIe0kRCbbFW7eEBPR+eYDElk3KUOp/UAWFxN96V5xHHmtkJwG6E+lW7m9ntZnaNme1FYJT4DIEr8N9unZ4HbG5ml4+3uk4FqKFxxU9Jmk4oZFa46orWrfvX3FX2euAoP4T6deBH62s14GJJXzWzHyVx0ce9/tVvgZlNAAJPDyiB8MIcY0vpkF7QroXUjUUY87WiUPIE+pgofTFwcaZ4IWZ2F3AMAXCyPLDIzJ7OxKD+y0LuREgl+U3WQKhbUhWh3uO8KzK5V037KQ7a5lbjqgTfc2EhFa0rbdkPlc8B17iFNLHPe8qACQTX0LmSTpc0MWHTfpAALX8mE58a2HMhcR8uymEhxc9MaJOFxSS9TtIuabHFNg9egFmSjvVxllLhkRYyjczmvh6xWKGZ2XxPRC6llpELtnp69YhhppZc8b1Yp6rSqaWY9Fdv0Ndz/Tj9mhUWUnttYlI+vRBIRevIMooVaoEP+gFZy4GYUhPt0nK47+oEeqG1JL3NzJ5w9+FfJB1AyNHJjqk+wHNa6cIFP2KpFEmHArOAizoAdDwLfFLSs2Z2RFIzSqlwaVY7LVVgGnhrViYgLEsulO8eSTBFiyhhmJns1vlGBA7DFdx6nE8AUNwG3OguxWqWoaYDRps1CHlzr3SLvUxAm94MXGFm92eShguB1MZhQI99+/3SiAuhOWCWtmvAURgN+/NWziFIKk0EULXNPLj4mWECguvnkrYFYomH70jaFdg+c2gvM6Bu9Akshr9bm2SyAE+2eqb9QIxMLNsCy0jaHLiug8TgRYQCgVUz+4oLpWqHtc3K/t1D/Vrg1t59wMu9AGZD4Eky7pqkDYB9gLcCLxlhGFVJfwZ+CJztydGlhFewnVSZ1T1/7l2JuzTbnpD0beAIM3syCqXCZceoASRKfbwKYTSYOWyfIeQgDROC69bmfiklwuhfBLjz3wjlxpVAv2s5AvvDwBbA/yUarBGqzT6bGdu0AbWUlmMxhDsPhdCzbULED0yE8SEdxJMsWZcvS/pELDffA4UzhfyX29x/K0v6P+DPwAEujNIcqAWZ15i4/WpCGfk/S9rTXW9KXJOt+tyKANrZ24VRzX87vaq+jgcD10p6UXRrFhYSfc+fiJtnri98L4VHdClOI1AaFfGuwRFGrwK+nDAl5Nkvc4DvElBZcwgQYNw6WMO1+L0IxKFq84COFEF7SLrMzM53190dkr4HfNgPqjIwQ9IyZrZgQKDfEaAwjZBXlEcgLWiFzPNDti5pNUKaR4yp7eBcf3/PiXSzxLL5pltKJ/eAoDYtVFhvA1ixJXBWUl6kmigzQ20UfDQXYN91EMy+7u4tNSCDjRbmJsClBFTjcMJoM7HJXq8B/wNcLmkzM3uiEEj9FUYlArLmaALBY7XH7sDoDjgZ+FDOw69ofZNJMuAbCQ2Q5dgvxwOHm9kTTWDPNwM3SzoF+BTwxeQQtTYReMdIuhR41sd6ggu4eFC9CFgd+McgsGQn97VuQpJaajMX61Hg8RFcq1VJH3WtvZoAIT5mZvu3sgxGmOsaIbH1GTP7bpdCyTJXK2G0G3C230M1Y3ED/NMt7ocTZWVNQlLulMSyjK7jdwIzJe1sZg+lQsn3j5L8tkneZyr0bnArreZruHXi2Vno7sezJb29OLz656YrA2eZ2Z59PPliGYJaMeUDZR1tR0DT1XJS/HzCc1ZISk+okVvIzJ7xWMUdfvjU23DflvywWBN4n5l9y62kv0v6FbAdIQYyAdhY0l1jzZKdEUivywjvdmLAc83s2UaWXmQyd7j1vkncyZL6VF8hcMnlzQeyxIPxHUmLzOzsfpXyiKXlJb2dUPbEknmKc3W2W97Xm9mzDX5jVbe+9yeQ0sb7GPZ//8Jdco8n8xn7fasLtGpS3+tRYG+HvKf9bAr8mAB0SNkqliliSP0BQ5QJSW4HO5S0EhPuenkB5UEgwCzaf7X9m8CpWwmj75rZCZKGYnmI6LvPXPWY6+LAhHOAI3OU+Y6H7X6Ju8qA8zMH+VsSPr5BKOdRIjBdkIM6CbfyaKIYREaWvd0dmAr1ultM+2Rh3B0I0jpwlqR39Cim1AyUsZELnZRuqgTcAWxlZu83s1+7gC5lKlCbmT1kZmcBmwKfThDGFRdKGxLADgClDGR7+wao0H3M7OJsdW0z+wOBr88I8dGdzGw3M3uyEEj9y5T/jZnNjy6BBgdL11c7yJeijSqRZs1jEVslsYR2lJf5wGdjZdZ21tQ/EyvLHuWHTrnN6rQQoLgbxL1JyJFamOTsbC9phURgjZnV6X++yjXwek7hcGMLSHTNodAfT1x8yvy9n6QXJDWuOs1rLAHnSdqxx0IpphYsQ2CWXybZA2UCA8TrzewaFwjlJBcqrT6tqDz7HjyWwL/4DIvDA8MueA50YExaVv4lyZyVCLHPi339ntdXLLpIKCy6qVNblYrE2P7CxR8qrBfGY0L15gTwQTuxo/gwX2Jm8/JylrkgMTMb9gB2u8i4iOTbIjn07yPUGzJ3260EvDu6ZQaAqeEjOd2Hccx/bBK3jdbRewh8lal1ZElfM5wpvdt5iP2fL2m7Hgql6Eo8kBCLqSbjvwXYwcz+HV2FnpyqZvOc5B9NMLNLCfRpKeCmDhzhtZ1Sjs/s3ERFp1HuVc0VuGsd8l2O+74QSKNDeVK08dM27gC4cm0XyksEUVzbwjU10lgrrvHennHrHSZp2bGykhKX4ksJOS3KkcdlBD6/W7KCOrGOhoCDEqtIBPLbv2beOzAhp7UOwU2WkL3+VNLreyGU/DemJPdhSZLu7mb2WN64lQumRe4Svgj4ZhIXEgH48DE/3+L4H0r6rxNYK7aO7CBZVoaUqSHN8yoEUtGK1lvLeO0OYgz3dRGviW7beUkZA7XZ78zMYX1PJp1gDeCzY1iPp+T3dlziimoXsSjgSoeulzPKYfzdtxL4KuuJZXQ4wQVqyVy+HNg+p5UUD9kjCLyBlkC2JxGSlDfrRiglB/zOwPRkHUvAaWb2ty5BFFVXCo4gkL6mZe7f5+7OYX/vl5m1qRBoq7Yzs+FomaWCqZG1VgikohWNnsYOV+qgiFx9lJlFYr8rRx8/z2f5JnFZfUrSa6PvfxStoyHvc5+ESaKcw31qBCRXK6vysIwVcy+hZPzlrvGnyccH51yruB53ATv6b5cToTQFuFTShj2wlHbOgBgWAKd0W0cpgjnM7EkWu4RjPy8CXp3w9J1PgJNXks9MI1QePl/SmyIKNSuYCoE0uvkojCIstmiMuXs2D5NA/M6MHsQbVyRAaPMkR5czFtWiJuwAP5S0cqztNBpF7cxs2BMtT8xZjyzG7v4O/CbrEkriFW92RoLUpXaKmS0ys6cI8OjUStpC0qbR1ZTjdqZ4Ttk2wN0ZoTTVk0I37EDgp3RKG2d4Dmeb2ZxOWcGbnGM/S1ymNf97M//MkFcj3jtRHGqJYNrNLajZkg6WtGoqmAqBNDrCYYXRgM1Gf3gx7UskB2L87KZdxBvjM7xZDiLRZopMqcG/6wTX3oWSJrtQqoyCZfRSAsHpJPJzNRqBImlRA6sqznPWOvoPcGaiRJ5BQJilyc2f6NDtZV5obxu3vMoJ0e50t5Rm5RT4llQlmJ65tz91EE9savn73rydkMqSCr71knssm9nVLnzmJ5ZSzYEWdQKy8xvALZKOlzQje8+FQKJvaKstHIpJH7XKmJy2cmEpDUapCRazAigHEmwXSVM9gF/K2WfUYPfoYA8syMRlprZgHNjctflVoouplx6AmBfjltErXaOekRPmHT/7APC9rLIWrSNPzHxj4s4yzwN7xHP7ymb2T+DCTO2gt0pax9epnMd6diqmOYTE0wcT67RGSBC9KqdQssQynpR5794+bPGnfNxpWzmJY8bKyBe6cnRJwhARk7yrfr8rElCBsyW9L73nQiD1x0KqEahXvpTUPbFY56RXlz+8swgZ9irWcyAUkXk5BFLcK6uwGDyQx/oYcnfUfgROsHbjLHFsD3ufceyrtxCcNQJTwu8jQswP2kqH1DpZQRQTft9NQAyu3kHOUXRXHukupFITy/PQBLhRdkvo1DTm4n+fnDxXNYJLdP8OrdloRdxCiIk9mrgKa4Q8nl80shoYmT4sqxg82SeXdLWNyshlM/u7me1ESGQ+3+e3kuztKJymAz+QdFT8bnGA9afFQPEnJZ0gafVGRba6uVwz3ozg212uIFYdGFftbTnddvGwO0TSbg63LTcL+rpiU/ZDPFah/UbOwzuO787M++u2sLKiUJoJXCPpfz2uFIutxcz/UivLKVHMKpGOxwXRmk7yei4h4J9XGEVhfL0TgpYzsaMIIV+fxSCAeK/nu0UUx1Nz78P1BIRcWvX0A5Km5bVmkwO7YmY3ATu4aysVSmsDV0paLUk8HakNNwAuvLBPHoDySLHrpOigmdnVZvYuV5a+TEiWLSd0RlEwfVbSPmZWK7js+qsxi0D7vqek21wr6pasMn5/FV9oCutooGJH1+Use59+9hw/5E9tUHY69efH8hG7A6cBy+ZUSOLnfu+HyLDzua07giu/nAiKQ4H3SDqdUDfn7ga5PqXsYZXEVaMlsj6wJyEgPiVxIZY6mPth4MNNAAKxAN/BLCYljkL2m9H92SB+dhIhgTgqDlOdn+3oTizD6O40s+sl7QBc5esXD+eXESDhbwbmtxDucayPuut12eS91fsAqFqWEK9K22ONBFNCvFp2d96dwBclHUvgDPwisHxybtWBr0m6rBBIo+O+Ww54Df1lFS8aAwH7voFQw2iVHELCktIApzhB5qnAtWb2n0wcZCqBa2x/17LJKYyUuKmuSYTHJgTI+kj7qZRYJDOAL7kn4FfAL9xCucddZrUGmvZUQkXWzd1S2TLRvGsdBuIju/ShZnZTC+toJosTbOO8X2ZmNzcgT41JsJcQ+PDWTvKbPizpxFggrwuh9AcnJb3ID/wo9DYiwM+3M7NHmrjvlNTL+ndC3QOwkbtTewF2MkkAL3UXW8pXN6dV3DKpu1Vy6/Np4HhJVwE/J+S5RQVleWDvQiCNjvtOfWBMtg40yaL1EfbtB+GTkn5M4EfLUw4k5VHb2q//SPqHa8HxoZ2VoKrqHSDQYtzkCjO731Ftw34w5lFwUqTYZGAnvyDQZs31cT+WACZWJND0TG8gUModCqNY/PBsMzu+SSJotI4+5gd/NbnHbzTR8uW/tUDSt4CvJ3GnFwPvNLMzE1b2ToXSVV6195IkHlR1BeEiSVsnfHKNfmehpFt9TFFQbCLpxcDcDljKm5Xn2D4ZW3Qz3pgIrQjSqGf7i2XaXXgPecLuHsDVGdDINoVAGp3cHmOM+cCKNqpuu5PcNTGhA1eaJTDjlVicaNuIiaCbPXV8YgksB+zSAfLWEnhvPbHyVm3g3mlk1ViDWj2dWEa/A/aN5LQNYh91Sau4azC1jq5z0tFSkzLl8WD9AfBZVwhifs0Bkn6Qo95VK6F0paR3AeclgrlKAJH8yK2g7JmkpATELwlAiSgwJ3tBvS9kEp87iRvVJU1yl2p6ls0nxNdwLsV2gRGLXHG7VtJNbg3GvfCSQrturXkVUOqi5Tlg6v6w/YMQ2yl1mCNWTmKQtcyldspYtzjAy8CFZvYbJ9CsAx9099twF2UWypks/VqTSwk6rNzF8xXLbf8B2NnMFjRhv4+0Qfu5lVZLNPzjWgnhZD0fBs7JaPMbAtt0S7qaCKULgXcn6x4Fya6u3NAgJhfv9QK3otJaTgdImtklw0bF98dh7l5L9/LPnLR1SNKLJW0j6bOSrpD0yQi+GUHYZUE1kwuB1FzLnUfA3tuA1IQp2pLD0FEiBG7v9EOz1qVlnV7WRYyr7C60gxLt1whxnzlJmfNeuJLLTS7rwfM57PP6ewKb9Xy3cpoV4JtCKNGeWke3E8AD1ibX26lJWe5ocRzUiwrQLjSGzOynrhxY4o6ttyo57sJsrltXlliqLyRUYZ3YCcNG4srdCvh8xhKsEghXIeQi/ZEQ8zrKk3+3GgEaHxWHKZn3Hy8EUmOtyAhJYHf0Kf5TtKV4//jrk8DuBNbl8hjvISUH3F4JxLnq8ZU/EWrT/C5JYhzEPV9PSm7/mBD0n98iThKtoz0IIJM05nZSEyYHmpRKuB24LMM/uLWkV/WiAqwf/hUz+767x8ptksnGxOgjPCk7hZFvCvwkYdgYaoUMTFIKyj6eTd36GkrQcGUnbr3Jhdw84BHvb4G/bujEq8r2F//tbuJNMnv0vkIgNXGZ+Ea+YJxYSIVbsj+uu9kEKpVFXbjvenGIx9jOgWZ2oR98tcxY7yckMp6S5IlUB2TvKwmm14DPmdk7zeypZsIosY4meepFSj56v1sP7dJuWRIbTCHhJWcc6NW+iZbSmT7mcpMy9v+FsjWz+/w7pcxc7UjIG3uFs27X01y25Cp7rmRM5N8TuJLF8OwI0LkV+EyCnKu5dVROYoGrAAf4uljaT6K0HerWVS1REq4uBBItqeO/49K/tJRaSZbQghStt0IpJkFeSgAMPJ4Eq0frkE8RUfub2YmNUGiJFbDQzD5GKC99V4L6qo2RYFIS8K4QahW90cy+miRf1kdQKt9FSOZNraPT3YItt1mdN5ZQ/7WPISVd3VXSrEZ5V11aSie5sBtRKCUMCd8noAaHklhZzS2R6yUdJ2n9RPCkFWNrkiZJ2k7S5QRy2RdkhNGDwK5OPpuek99L+otn5ZGSPpLtx5WFQ4EvZNbkSeB7BcquNYT3YZ+8Mwn+46WpAmzc4M/44UMRK+v5PooB68skbQl8O3FTVHsUU2nmnosa630ExNWVvqerI7iqS2Z2kaRfA58EPspijrtUm7U+uxdJ7mEeAXZ9ksOcy01QcWTyiIYIZSOUAAUeA87ooDRDhD+f7IpqnI9JwEfN7OBuKJSa7JsT3bX1lQxUvaGl5PNyqN/bwRkrahIh5vVxSTe6YL2PUENrJWAdAuJtrYx7tOYC7gFgWzO7M51///smSecRXNTDiYvvVC8f8iv//gwCy/orE2s1fv44M/snkh5RaHW132r+enPiE+zLBo3BOElv6GCckjTsr1/336l00PfXkvuuauloi/z1x6lvN+PnnSlpQQfzHufop9nfbjHHG3d4H7GvC0Yisk36enWHfcW9dFqevZT0u4ykL0l6KjP+agf7Om11/43hzO+e7jQ3uQh+089KWt33/7wGc9HtuFuNX5IelHSEpOnZvdnmfO+SzEX87ZM6ITx2N5dJeoGk+5Mx1/0MfaGkGcnZGJ+vffKeO0l/Ff/7i5nf/KdX8n3euRtpmfzvjybPbrz/4TbP9uxnr5O0VqN5S7g1p0m6JxlnPZmLRn3Ukvu5WtKEyGUX6cHzXCmMc7TN907HWu/Q7VI2s08SkCYpxDP9/eoScqVjHSIUZDtsBGWiNkpzPprrO6p7KXGJLTCzwwmUTycTEkdT9Fk901e9yVVL1qWWgV0vIBBabm5mH3Irvx2LIjte8+/N9f2/vltLv0tcOOUM8ip7Now09moD2PgiZ5DYF1jfzI4ws3lJuet6DvDDIUm/5r99UgOaoHZzaMqZWklxvVYA3u9u2RTpVu/U6+ButWgpHQkc689sfYTvREvpVGfD+FUyt5EyaZFbRtlrUQLJr7gb7UvAG8xsTqN9lIB4HiYwh9zl44zzsKhBH9E6GiIwNuz6HCdfCynWTrt3FC2kN3WphZ3SiaaSsRg2lfSLLudsUNpsSa9opHUm9zuryz6uzGEhvbrLvi7PYSFt1mVf3+9C602tj9Uk7S/pKkmPdTGeBZKul/R5ryP03P12+1w2yieR9AovtHaZpId6sBcfknSppIMkrZddszz3kKzxDg36ObebcjAxbuV5NwsanIUbNOhzv07Pnez8J56aexpZSC2s3F18fp9pcz3+6fGmWe1apskYp0k6Q9KzI/QxV9JB2fItJunUJHhlOZA7FULJ2s93UVysrU3gUn89QrZ0Paf/OtLG/9zMzs2rLWZqqUS/6QYEDq6XE7KilwSm7aiVPEag97/INbD/QinFDHBJKwPHuCaTd38MATe4H9ya7ZFkfdcAjqQzFFnaV1OqlKSvmQSYLB2AXSYAvzSzs7rYSyWHW6d8a9PdctqAUPhshmvey/j+LREg5IsIWfIPEaqi3gr8xaHcZEgt631ge66la+ncdGv5szDLAQTTCHkwk5PgvwFPA0+4ZX63a9O3AneZ2WMj9dXuOH3vrkPgd6sm8aibCbxvdHtmeTXbqZnz6G8EgtpKckbeamYPtnoG2pz7kluuZxCQm6s4rVHLZytNFpa0pltNMVY01ccY1+Q2z0mbHYELkemhnbGnz56ktYG3AK8isHZM8n7ucCv7CqfZsl6sB+M047E8imXJR+N+CpTlGM//SPWEPHdkWUmT/W9rFXMYjTVtZ9zJ2J+7evGbA1aMcVT7TDwXRyWxQWvz3CrlLSPfyVqMxNDQzIqL7f8BV/IAxVyN0yUAAAAASUVORK5CYII=";
+const stage = document.getElementById("stage");
+const tpl = document.getElementById("deck");
+
+const slides = Array.from(tpl.content.querySelectorAll("section.slide"));
+let shown = 0;
+slides.forEach(s => {
+  if (!s.hasAttribute("data-nonum")) shown++;
+  const r = document.createElement("div");
+  r.className = "ribbon";
+  const img = document.createElement("img");
+  img.src = LOGO; img.alt = "ITAM";
+  const sep = document.createElement("span"); sep.className = "sep";
+  const w = document.createElement("span"); w.className = "where";
+  w.textContent = s.dataset.sec || "";
+  const n = document.createElement("span"); n.className = "num";
+  n.textContent = s.hasAttribute("data-nonum") ? "" : String(shown);
+  r.append(img, sep, w, n);
+  s.appendChild(r);
+  stage.appendChild(s);
+});
+
+const all = Array.from(stage.querySelectorAll("section.slide"));
+const notesBox = document.getElementById("notes");
+let i = 0;
+
+function render() {
+  all.forEach((s, k) => s.classList.toggle("on", k === i));
+  const nt = all[i].querySelector(".notes");
+  notesBox.innerHTML = nt ? nt.innerHTML
+    : '<span style="opacity:.5">Sin notas para esta lámina.</span>';
+  document.querySelectorAll("#idxGrid button").forEach((b, k) =>
+    b.classList.toggle("cur", k === i));
+  const h = "#" + (i + 1);
+  if (location.hash !== h) history.replaceState(null, "", h);
+}
+function go(n) { i = Math.max(0, Math.min(all.length - 1, n)); render(); }
+
+// --- índice, agrupado por sesión ---
+const grid = document.getElementById("idxGrid");
+const groups = new Map();
+all.forEach((s, k) => {
+  const key = (s.dataset.sec || "").split(" · ")[0];
+  if (!groups.has(key)) groups.set(key, []);
+  groups.get(key).push([k, s]);
+});
+for (const [name, items] of groups) {
+  const box = document.createElement("div");
+  const h = document.createElement("h3"); h.textContent = name;
+  const ol = document.createElement("ol");
+  items.forEach(([k, s]) => {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.type = "button";
+    b.innerHTML = "<i>" + (k + 1) + "</i><span></span>";
+    b.querySelector("span").textContent = s.dataset.title || "";
+    b.onclick = () => { document.body.classList.remove("show-index"); go(k); };
+    li.appendChild(b); ol.appendChild(li);
+  });
+  box.append(h, ol); grid.appendChild(box);
+}
+
+// --- escala del escenario ---
+function fit() {
+  const pad = document.body.classList.contains("show-notes") ? 0.68 : 1;
+  const s = Math.min(innerWidth / 1280, (innerHeight * pad) / 720);
+  stage.style.transform = "scale(" + s + ")";
+}
+addEventListener("resize", fit);
+
+// --- teclado ---
+addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key;
+  if (["ArrowRight", " ", "PageDown", "j", "n"].includes(k)) { go(i + 1); e.preventDefault(); }
+  else if (["ArrowLeft", "PageUp", "k", "p"].includes(k)) { go(i - 1); e.preventDefault(); }
+  else if (k === "Home") go(0);
+  else if (k === "End") go(all.length - 1);
+  else if (k === "o" || k === "O") document.body.classList.toggle("show-index");
+  else if (k === "s" || k === "S") { document.body.classList.toggle("show-notes"); fit(); }
+  else if (k === "f" || k === "F") {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen?.();
+  }
+  else if (k === "Escape") document.body.classList.remove("show-index");
+});
+
+// --- clic para avanzar (no sobre el índice ni sobre las notas) ---
+document.getElementById("viewport").addEventListener("click", e => {
+  if (document.body.classList.contains("show-index")) return;
+  go(e.clientX < innerWidth * 0.18 ? i - 1 : i + 1);
+});
+
+const start = parseInt(location.hash.slice(1), 10);
+if (Number.isFinite(start) && start >= 1 && start <= all.length) i = start - 1;
+render(); fit();
+</script>

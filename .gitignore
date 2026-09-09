@@ -216,3 +216,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- específico del curso ---
+.DS_Store
+data/
+runs/
+checkpoints/
+*.pt
+*.pth
