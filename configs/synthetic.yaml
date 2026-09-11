@@ -1,0 +1,21 @@
+# Dataset común de todos los equipos: no cambien la parte de datos, es la
+# columna comparable de la sesión 3. Se genera con `make_synthetic.py` sin argumentos.
+data_root: data/synthetic
+test_frac: 0.3
+gallery_frac: 0.5
+min_images: 2
+image_size: 32
+grayscale: true
+
+backbone: small_cnn
+embedding_dim: 64
+
+arcface_s: 30.0
+arcface_m: 0.4
+
+epochs: 15
+batch_size: 64
+lr: 0.001
+weight_decay: 0.0005
+num_workers: 2
+seed: 0

@@ -1,0 +1,159 @@
+"""Loop de entrenamiento: datos → modelo → ArcFace → evaluación por época."""
+
+import csv
+import random
+import time
+from dataclasses import asdict
+from datetime import datetime
+from pathlib import Path
+
+import numpy as np
+import torch
+import yaml
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+
+from .config import Config
+from .data import IdentityImageDataset, build_transforms, make_open_set_split
+from .evaluate import evaluate
+from .losses import ArcFace
+from .models import EmbeddingModel
+
+
+def resolve_device(name: str = "auto") -> torch.device:
+    if name != "auto":
+        return torch.device(name)
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    if torch.backends.mps.is_available():
+        return torch.device("mps")
+    return torch.device("cpu")
+
+
+def set_seed(seed: int) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+
+
+def _describe(name: str, items: list) -> str:
+    n_ids = len({identity for _, identity in items})
+    return f"{name:<8} {n_ids:>6} identidades · {len(items):>7} imágenes"
+
+
+def train(cfg: Config) -> dict[str, float]:
+    set_seed(cfg.seed)
+    device = resolve_device(cfg.device)
+
+    split = make_open_set_split(
+        Path(cfg.data_root),
+        test_frac=cfg.test_frac,
+        test_ids=cfg.test_ids,
+        gallery_frac=cfg.gallery_frac,
+        min_images=cfg.min_images,
+        seed=cfg.seed,
+    )
+    print(_describe("train", split.train))
+    print(_describe("galería", split.gallery))
+    print(_describe("queries", split.query))
+
+    leaked = {i for _, i in split.train} & {i for _, i in split.gallery + split.query}
+    if leaked:
+        # no se detiene: medir la fuga a propósito es un experimento válido
+        print(
+            f"\n⚠  FUGA: {len(leaked)} identidades están en train y en prueba. "
+            "Estos números NO miden generalización.\n"
+        )
+
+    train_tf, eval_tf = build_transforms(cfg.image_size, cfg.grayscale)
+    train_ds = IdentityImageDataset(split.train, train_tf, cfg.grayscale)
+    gallery_ds = IdentityImageDataset(split.gallery, eval_tf, cfg.grayscale)
+    query_ds = IdentityImageDataset(split.query, eval_tf, cfg.grayscale)
+
+    loader = DataLoader(
+        train_ds,
+        batch_size=cfg.batch_size,
+        shuffle=True,
+        num_workers=cfg.num_workers,
+        # BatchNorm truena con un batch de tamaño 1: mejor tirar el último si queda incompleto
+        drop_last=True,
+        pin_memory=device.type == "cuda",
+        persistent_workers=cfg.num_workers > 0,
+    )
+    if len(loader) == 0:
+        raise ValueError(
+            f"El entrenamiento tiene {len(train_ds)} imágenes, menos que batch_size={cfg.batch_size}. "
+            "Bajen batch_size en el YAML."
+        )
+
+    model = EmbeddingModel(
+        cfg.backbone,
+        cfg.embedding_dim,
+        pretrained=cfg.pretrained,
+        in_channels=1 if cfg.grayscale else 3,
+    ).to(device)
+    # una fila de W por identidad de ENTRENAMIENTO; se descarta al terminar
+    criterion = ArcFace(
+        cfg.embedding_dim,
+        train_ds.num_classes,
+        s=cfg.arcface_s,
+        m=cfg.arcface_m,
+    ).to(device)
+
+    # los centros de clase de ArcFace también se entrenan: si se quedan fuera del
+    # optimizador, W se congela en su inicialización y el modelo aprende contra
+    # centros al azar
+    params = list(model.parameters()) + list(criterion.parameters())
+    optimizer = torch.optim.AdamW(params, lr=cfg.lr, weight_decay=cfg.weight_decay)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=cfg.epochs * len(loader))
+
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    run_dir = Path(cfg.out_dir) / f"{Path(cfg.data_root).name}_{cfg.backbone}_{stamp}"
+    run_dir.mkdir(parents=True)
+    (run_dir / "config.yaml").write_text(yaml.safe_dump(asdict(cfg), allow_unicode=True, sort_keys=False))
+    print(f"\ndevice {device} · {cfg.epochs} épocas · {len(loader)} pasos por época · salida en {run_dir}\n")
+
+    best = {"recall@1": -1.0}
+    with open(run_dir / "metrics.csv", "w", newline="") as f:
+        writer = None
+        for epoch in range(1, cfg.epochs + 1):
+            model.train()
+            start = time.time()
+            total = 0.0
+            for images, labels in tqdm(loader, desc=f"época {epoch}/{cfg.epochs}", leave=False):
+                images, labels = images.to(device), labels.to(device)
+                loss = criterion(model(images), labels)
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                scheduler.step()
+                total += loss.item()
+
+            metrics = evaluate(model, gallery_ds, query_ds, device)
+            row = {
+                "epoch": epoch,
+                "loss": total / len(loader),
+                **metrics,
+                "lr": scheduler.get_last_lr()[0],
+                "seconds": round(time.time() - start, 1),
+            }
+            if writer is None:
+                writer = csv.DictWriter(f, fieldnames=list(row))
+                writer.writeheader()
+            writer.writerow(row)
+            f.flush()
+
+            print(
+                f"época {epoch:>3}  loss {row['loss']:.3f}  "
+                f"R@1 {metrics['recall@1']:.3f}  R@5 {metrics['recall@5']:.3f}  "
+                f"mAP {metrics['mAP']:.3f}  TAR@FAR=1e-2 {metrics['tar@far=1e-2']:.3f}  "
+                f"({row['seconds']}s)"
+            )
+
+            if metrics["recall@1"] > best["recall@1"]:
+                best = {"epoch": epoch, **metrics}
+                # solo el modelo: el head de ArcFace ya no sirve después de entrenar
+                torch.save({"model": model.state_dict(), "config": asdict(cfg)}, run_dir / "best.pt")
+
+    print(f"\nmejor época {best['epoch']}: R@1 {best['recall@1']:.3f} · checkpoint en {run_dir / 'best.pt'}")
+    return best

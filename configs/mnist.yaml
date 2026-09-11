@@ -1,0 +1,21 @@
+# Sirve como segundo dataset, no para comparar equipos: en nuestras pruebas,
+# el vecino más cercano en píxeles crudos le ganó en R@1 al modelo entrenado.
+data_root: data/mnist
+test_ids: ["8", "9"]
+gallery_frac: 0.5
+min_images: 2
+image_size: 28
+grayscale: true
+
+backbone: small_cnn
+embedding_dim: 64
+
+arcface_s: 30.0
+arcface_m: 0.4
+
+epochs: 8
+batch_size: 128
+lr: 0.001
+weight_decay: 0.0005
+num_workers: 2
+seed: 0
