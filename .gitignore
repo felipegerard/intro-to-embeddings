@@ -225,3 +225,4 @@ checkpoints/
 *.pt
 *.pth
 _solucion/
+_experimentos/
