@@ -58,6 +58,10 @@ código; lo que falta es lo que toca los datos.
 | `src/embeddings/evaluate.py` | **Dado y congelado** |
 | `scripts/make_synthetic.py` | Dado |
 | `scripts/run_train.py` | Dado |
+| `scripts/export_mnist.py` | Dado — MNIST idéntico para todos |
+| `scripts/baseline_pixels.py` | Dado — el piso sin modelo |
+| `scripts/smoke_test.py` | Dado — valida el entorno sin `data.py` |
+| `tests/` | Dado — el contrato de `data.py`; su lista de pendientes |
 
 Las tres piezas de `data.py`:
 
@@ -67,6 +71,18 @@ Las tres piezas de `data.py`:
 
 Más el trabajo real: elegir dataset, convertirlo a carpeta-por-identidad,
 mirarlo, limpiarlo, decidir augmentations.
+
+### Solución de referencia
+
+`_solucion/data.py` implementa las tres piezas y **no se versiona** (está en
+`.gitignore`), porque el repo es público. Sirve para calificar y para verificar
+el repo de punta a punta:
+
+```bash
+cp _solucion/data.py src/embeddings/data.py
+pytest && python scripts/run_train.py --config configs/synthetic.yaml
+git checkout src/embeddings/data.py
+```
 
 ### La evaluación va congelada
 
@@ -90,19 +106,37 @@ El split reparte **identidades**, no imágenes. Ninguna identidad puede estar en
 train y en test a la vez. Hay un test que falla si
 `set(train_ids) & set(test_ids)` no está vacío.
 
+Dentro de prueba, `gallery_frac` (0.5) de las imágenes de cada identidad van a
+galería y el resto a queries. Las identidades con menos de `min_images` (2) se
+descartan por completo: no sirven para entrenar, y en prueba no pueden estar a
+la vez en galería y en queries. MNIST fija su split con `test_ids: ["8", "9"]`.
+
 ### Datasets
 
-Todos corren **MNIST** (entrenar 0–7, evaluar 8–9) como piso común y única
-columna comparable entre equipos. Más un segundo dataset a su elección:
-
-1. MNIST / Fashion-MNIST — obligatorio
-2. Omniglot — recomendado, se reservan alfabetos completos
-3. Sintético del repo (`make_synthetic.py`) — el de mayor valor pedagógico,
-   permite ablaciones controladas
-4. CIFAR-100 — 80 clases train, 20 test
-5. CUB-200-2011 — para quien tenga GPU
-
+Todos corren el **sintético común**: `make_synthetic.py` sin argumentos (200
+identidades × 20 imágenes, `variation=1.0`, `noise=0.15`, seed 0). Es la columna
+comparable de la sesión 3. Más un segundo dataset a su elección: Omniglot,
+MNIST, sintético propio, Fashion-MNIST, CIFAR-100 o CUB-200-2011 (este pide GPU).
 Pueden traer otro si pueden definir el split por identidad sin fuga.
+
+**Por qué no MNIST** (decidido el 2026-09-10, después de medirlo): es tan fácil
+que el vecino más cercano en píxeles crudos le gana en R@1 al modelo entrenado,
+así que el número de un equipo no dice nada de su modelo.
+
+| R@1, `small_cnn`, config por defecto | Píxeles crudos | Entrenado |
+|---|---|---|
+| MNIST 0–7 / 8–9 | 0.976 | 0.960 |
+| MNIST 0–4 / 5–9 | 0.956 | 0.900 |
+| Sintético común | 0.688 | 0.942 |
+
+MNIST sí puede ser su segundo dataset (decidido el 2026-09-10), pero no la columna
+comparable. Si lo eligen, tienen que explicar qué aporta su modelo sobre los píxeles.
+
+**Línea base de píxeles, obligatoria** (decidido el 2026-09-10):
+`baseline_pixels.py` evalúa el vecino más cercano en píxeles crudos con el mismo
+split y la misma evaluación. Cada equipo la reporta para sus dos datasets. En la
+tabla de la sesión 3 es una fila de referencia (≈ 0.69 de R@1 en el sintético
+común) y una columna para el dataset propio.
 
 ### Backbones
 

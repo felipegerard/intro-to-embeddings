@@ -1491,7 +1491,7 @@ body:not(.show-index) #index{display:none}
   </div>
   <div class="fill">
     <div class="cols c2" style="align-items:start">
-<pre>intro-to-embeddings/
+<pre style="font-size:13.5px">intro-to-embeddings/
 ├── src/embeddings/
 │   ├── config.py     <span class="cm"># hiperparámetros</span>
 │   ├── <span class="todo">data.py</span>       <span class="cm"># ← USTEDES</span>
@@ -1500,11 +1500,15 @@ body:not(.show-index) #index{display:none}
 │   ├── evaluate.py   <span class="cm"># NO TOCAR</span>
 │   └── train.py      <span class="cm"># loop completo</span>
 ├── scripts/
+│   ├── smoke_test.py
+│   ├── export_mnist.py
 │   ├── make_synthetic.py
-│   └── run_train.py
+│   ├── run_train.py
+│   └── baseline_pixels.py
 ├── configs/
 │   ├── mnist.yaml
-│   └── custom.yaml
+│   └── synthetic.yaml
+├── tests/            <span class="cm"># su lista de pendientes</span>
 └── data/             <span class="cm"># no versionado</span></pre>
       <div class="vlist">
         <div class="card">
@@ -1562,7 +1566,7 @@ body:not(.show-index) #index{display:none}
         <table>
           <thead><tr><th style="width:38%">Backbone</th><th>Para quién</th></tr></thead>
           <tbody>
-            <tr><td class="k"><code>small_cnn</code></td><td>28×28 en gris. Corre en CPU. El de MNIST y Omniglot.</td></tr>
+            <tr><td class="k"><code>small_cnn</code></td><td>28×28 en gris. Corre en CPU. El del sintético y Omniglot.</td></tr>
             <tr><td class="k"><code>resnet18</code></td><td>Preentrenada. La opción por defecto si hay GPU o Mac con MPS.</td></tr>
             <tr><td class="k"><code>mobilenet_v3_small</code></td><td>Ligera y preentrenada. El punto medio.</td></tr>
           </tbody>
@@ -1694,7 +1698,7 @@ body:not(.show-index) #index{display:none}
 │   ├── 0001.jpg
 │   └── 0002.jpg
 ├── id_00003/
-│   └── 0001.jpg     <span class="cm"># una sola: solo sirve en query</span>
+│   └── 0001.jpg     <span class="cm"># una sola: se descarta</span>
 └── ...</pre>
       <div class="vlist">
         <ul class="ticks">
@@ -1733,12 +1737,12 @@ body:not(.show-index) #index{display:none}
             <text x="16" y="126" font-size="12.5" font-weight="600" fill="currentColor" opacity=".7">2 · dentro de test, repartir IMÁGENES</text>
             <rect x="230" y="136" width="112" height="52" rx="7" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.4"/>
             <text x="286" y="158" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">galería</text>
-            <text x="286" y="176" text-anchor="middle" font-size="11" fill="currentColor" opacity=".65">1–2 por id</text>
+            <text x="286" y="176" text-anchor="middle" font-size="11" fill="currentColor" opacity=".65">~50% por id</text>
             <rect x="352" y="136" width="112" height="52" rx="7" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.4"/>
             <text x="408" y="158" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">queries</text>
-            <text x="408" y="176" text-anchor="middle" font-size="11" fill="currentColor" opacity=".65">el resto</text>
+            <text x="408" y="176" text-anchor="middle" font-size="11" fill="currentColor" opacity=".65">el otro ~50%</text>
             <text x="116" y="164" text-anchor="middle" font-size="12" fill="var(--c-pos)" opacity=".8">(train no se subdivide)</text>
-            <text x="240" y="212" font-size="12" fill="var(--c-5)" font-weight="600">Nunca al revés: repartir imágenes primero es la fuga.</text>
+            <text x="240" y="212" text-anchor="middle" font-size="12" fill="var(--c-5)" font-weight="600">Nunca al revés: repartir imágenes primero es la fuga.</text>
           </svg>
         </figure>
       </div>
@@ -1746,14 +1750,12 @@ body:not(.show-index) #index{display:none}
 <pre><span class="kw">def</span> <span class="fn">make_open_set_split</span>(
     root: Path,
     test_frac: float = <span class="nu">0.3</span>,
+    test_ids: list[str] | <span class="kw">None</span> = <span class="kw">None</span>,
+    gallery_frac: float = <span class="nu">0.5</span>,
     min_images: int = <span class="nu">2</span>,
     seed: int = <span class="nu">0</span>,
 ) -&gt; Split:
-    <span class="st">"""Reparte IDENTIDADES, no imágenes.
-
-    Ninguna identidad puede aparecer en train
-    y en test a la vez.
-    """</span>
+    <span class="st">"""Reparte IDENTIDADES, no imágenes."""</span>
     <span class="todo">...</span>  <span class="cm"># ← su trabajo</span></pre>
         <div class="card">
           <h3>La prueba que tiene que pasar</h3>
@@ -1774,7 +1776,7 @@ body:not(.show-index) #index{display:none}
     <table>
       <thead><tr><th style="width:26%">Situación</th><th style="width:32%">Qué pasa</th><th>Qué hacer</th></tr></thead>
       <tbody>
-        <tr><td class="k">1 imagen por identidad</td><td>No hay nada que acercar. La identidad no aporta señal de entrenamiento.</td><td>Sácala de train. Sirve como query en evaluación.</td></tr>
+        <tr><td class="k">1 imagen por identidad</td><td>No hay nada que acercar. La identidad no aporta señal de entrenamiento.</td><td>Descártala: no sirve para entrenar, y en prueba no puede estar a la vez en galería y en queries.</td></tr>
         <tr><td class="k">2–5 imágenes</td><td>El caso normal y suficiente.</td><td>Nada. Es el régimen para el que sirve este método.</td></tr>
         <tr><td class="k">Una identidad con 500 y el resto con 3</td><td>ArcFace sobreajusta el centro de la clase gorda y la ignora en el resto.</td><td>Trunca a un máximo por identidad, o usa un sampler balanceado <em>(extra)</em>.</td></tr>
         <tr><td class="k">Etiquetas mal puestas</td><td>Dos identidades distintas bajo la misma carpeta. Envenena el centro de esa clase.</td><td>Entrena una vez, ordena por pérdida y revisa a mano las 50 peores. <strong>Sorprende lo que aparece.</strong></td></tr>
@@ -1856,7 +1858,7 @@ body:not(.show-index) #index{display:none}
         <p class="body" style="max-width:none">Elegir el dataset, convertirlo a carpeta-por-identidad, mirarlo, limpiarlo, decidir cuántas imágenes por identidad y qué augmentations tienen sentido. <strong>Son 85 líneas de código y una semana de decisiones sobre datos.</strong> Esa proporción es a propósito.</p>
       </div>
       <div class="cols c2" style="gap:18px">
-        <div class="card flat"><p class="small" style="color:var(--ink-soft)"><strong>Todos corren MNIST</strong> (entrenar con 0–7, evaluar con 8–9). Es el piso común y la única columna comparable entre equipos.</p></div>
+        <div class="card flat"><p class="small" style="color:var(--ink-soft)"><strong>Todos corren el sintético común</strong> (<code>make_synthetic.py</code> sin argumentos: los mismos 200 glifos para todos). Es la única columna comparable entre equipos.</p></div>
         <div class="card flat"><p class="small" style="color:var(--ink-soft)"><strong>Y todos corren un segundo dataset</strong>, elegido por el equipo. Ahí es donde se ponen interesantes las diferencias.</p></div>
       </div>
     </div>
@@ -1867,24 +1869,25 @@ body:not(.show-index) #index{display:none}
 <section class="slide" data-sec="Sesión 2 · El ejercicio" data-title="Datasets sugeridos">
   <div class="head">
     <p class="eyebrow">El ejercicio · 2 de 4</p>
-    <h2>Cinco opciones. O la suya.</h2>
+    <h2>El común, y uno a su elección</h2>
   </div>
   <div class="fill">
     <table>
-      <thead><tr><th style="width:6%"></th><th style="width:20%">Dataset</th><th style="width:38%">Cómo se parte en open-set</th><th>Peso</th></tr></thead>
+      <thead><tr><th style="width:5%"></th><th style="width:19%">Dataset</th><th style="width:50%">Cómo se parte en open-set</th><th>Peso</th></tr></thead>
       <tbody>
-        <tr><td class="k num-col">1</td><td class="k">MNIST / Fashion-MNIST <span class="tag" style="margin-left:6px">obligatorio</span></td><td>Entrenar con los dígitos 0–7, evaluar con 8–9. Variante: entrenar con MNIST y evaluar con letras de EMNIST.</td><td>Corre en CPU en minutos.</td></tr>
-        <tr><td class="k num-col">2</td><td class="k">Omniglot</td><td>1 623 caracteres de 50 alfabetos, 20 imágenes cada uno. Se reservan alfabetos completos para test.</td><td>Muy ligero. 105×105 en gris.</td></tr>
-        <tr><td class="k num-col">3</td><td class="k">Sintético del repo</td><td><code>make_synthetic.py</code>: glifos generados con variación controlada. Ustedes eligen cuántas identidades, cuánta variación y cuánto ruido.</td><td>Se genera en segundos.</td></tr>
-        <tr><td class="k num-col">4</td><td class="k">CIFAR-100</td><td>Entrenar con 80 clases, evaluar con las 20 restantes.</td><td>32×32. Ligero.</td></tr>
-        <tr><td class="k num-col">5</td><td class="k">CUB-200-2011</td><td>El benchmark clásico: aves 1–100 para entrenar, 101–200 para evaluar.</td><td>Pide GPU. 224×224.</td></tr>
+        <tr><td class="k num-col">1</td><td class="k">Sintético común <span class="tag" style="margin-left:6px">obligatorio</span></td><td><code>make_synthetic.py</code> sin argumentos. Idéntico para todos.</td><td>Se genera en segundos.</td></tr>
+        <tr><td class="k num-col">2</td><td class="k">Omniglot</td><td>Se reservan alfabetos completos para evaluar.</td><td>Muy ligero.</td></tr>
+        <tr><td class="k num-col">3</td><td class="k">MNIST</td><td>0–7 para entrenar, 8–9 para evaluar. Los píxeles ya dan R@1 0.97.</td><td>Corre en CPU.</td></tr>
+        <tr><td class="k num-col">4</td><td class="k">Fashion-MNIST</td><td>Unas prendas para entrenar, otras para evaluar.</td><td>Corre en CPU.</td></tr>
+        <tr><td class="k num-col">5</td><td class="k">CIFAR-100</td><td>80 clases para entrenar, 20 para evaluar.</td><td>32×32. Ligero.</td></tr>
+        <tr><td class="k num-col">6</td><td class="k">CUB-200-2011</td><td>Aves 1–100 para entrenar, 101–200 para evaluar.</td><td>Pide GPU.</td></tr>
       </tbody>
     </table>
     <div class="card flat" style="margin-top:20px">
-      <p class="body" style="max-width:none"><strong>Pueden traer otro</strong>, con una condición: que se pueda definir un split por identidad sin fuga. Si no logran explicar cuál es la identidad en su dataset, ése no es el dataset.</p>
+      <p class="body" style="max-width:none"><strong>Pueden traer otro</strong> —incluso un sintético propio, con otros argumentos— con una condición: que se pueda definir un split por identidad sin fuga. Si no logran explicar cuál es la identidad en su dataset, ése no es el dataset.</p>
     </div>
   </div>
-  <div class="notes">El sintético es el que más enseña: al controlar la variación intra-clase pueden hacer ablaciones limpias que con datos reales son imposibles. Empújalo con los equipos fuertes.</div>
+  <div class="notes">MNIST cuenta como segundo dataset, pero no sirve para comparar: el vecino más cercano en píxeles crudos da R@1 0.976, más que un modelo entrenado (0.960). Vale contarlo: es la mejor justificación de por qué la columna común es el sintético. Si un equipo lo elige, exígele que explique qué aporta su modelo sobre los píxeles. Y empuja el sintético propio con los equipos fuertes: controlar la variación permite ablaciones limpias que con datos reales son imposibles.</div>
 </section>
 
 <!-- ============ EJERCICIO 3 ============ -->
@@ -1923,7 +1926,7 @@ body:not(.show-index) #index{display:none}
           <h3>Entregables</h3>
           <ul class="ticks" style="margin-top:10px;font-size:16px">
             <li>El repo con <code>data.py</code> completo y su script de conversión.</li>
-            <li>La salida de <code>evaluate.py</code> para MNIST y para su dataset.</li>
+            <li>La salida de <code>evaluate.py</code> y de <code>baseline_pixels.py</code>, para el sintético común y para su dataset.</li>
             <li>Presentación de <strong>20 minutos</strong> el día de la sesión 3.</li>
           </ul>
         </div>
@@ -1949,14 +1952,14 @@ body:not(.show-index) #index{display:none}
       </div>
     </div>
   </div>
-  <div class="notes">Dilo explícitamente: no es una competencia de recall. Un equipo con un dataset difícil y buen análisis va a sacar más que uno con MNIST y suerte.</div>
+  <div class="notes">Dilo explícitamente: no es una competencia de recall. Un equipo con un dataset difícil y buen análisis va a sacar más que uno con un dataset fácil y suerte.</div>
 </section>
 
 <!-- ============ ARRANQUE ============ -->
 <section class="slide" data-sec="Sesión 2 · Arranque" data-title="Antes de irse">
   <div class="head">
     <p class="eyebrow">Últimos 10 minutos</p>
-    <h2>Nadie se va sin haber corrido una época</h2>
+    <h2>Nadie se va sin pasar el smoke test</h2>
   </div>
   <div class="fill">
     <div class="cols c2" style="align-items:center">
@@ -1966,15 +1969,15 @@ cd intro-to-embeddings
 python -m venv .venv &amp;&amp; source .venv/bin/activate
 pip install -e .
 
-<span class="cm"># genera el dataset sintético (segundos)</span>
-python scripts/make_synthetic.py --out data/synthetic
+<span class="cm"># valida torch, el device, el modelo y ArcFace</span>
+python scripts/smoke_test.py
 
-<span class="cm"># entrena con la solución de referencia de data.py</span>
-python scripts/run_train.py --config configs/mnist.yaml</pre>
+<span class="cm"># el dataset común (segundos)</span>
+python scripts/make_synthetic.py</pre>
       <div class="vlist">
         <ul class="ticks">
-          <li>Que <strong>al menos una máquina por equipo</strong> llegue hasta el final de una época hoy.</li>
-          <li>Si truena por memoria: bajen <code>batch_size</code> y <code>image_size</code> en el YAML.</li>
+          <li>Que <strong>al menos una máquina por equipo</strong> termine el smoke test con <code>✓ Todo en orden</code> hoy.</li>
+          <li>Si van a usar un preentrenado: <code>smoke_test.py --backbone resnet18</code>, que además descarga los pesos.</li>
           <li>En Mac se usa <code>mps</code>; si algún operador no está soportado, <code>--device cpu</code> y sigan.</li>
         </ul>
         <div class="card flat">
@@ -1983,7 +1986,7 @@ python scripts/run_train.py --config configs/mnist.yaml</pre>
       </div>
     </div>
   </div>
-  <div class="notes">Reserva de verdad estos 10 minutos. Es lo que más impacto tiene en que la semana del ejercicio no se vaya en instalar cosas.</div>
+  <div class="notes">Reserva de verdad estos 10 minutos. El smoke test no necesita data.py, así que todos lo pueden correr hoy aunque no hayan escrito una línea.</div>
 </section>
 
 <!-- ============ DIVISOR S3 ============ -->
@@ -2018,7 +2021,7 @@ python scripts/run_train.py --config configs/mnist.yaml</pre>
       <tbody>
         <tr><td class="k num-col">4 min</td><td class="k">Su dataset</td><td>Qué es una identidad ahí, cuántas hay, cuántas imágenes por identidad, y qué encontraron al mirarlo de cerca.</td></tr>
         <tr><td class="k num-col">4 min</td><td class="k">Sus decisiones</td><td>El split, las augmentations, el backbone. <strong>Por qué</strong> cada una, no solo cuál.</td></tr>
-        <tr><td class="k num-col">5 min</td><td class="k">Resultados</td><td>MNIST y su dataset, con la misma métrica de todos. Curvas de entrenamiento incluidas.</td></tr>
+        <tr><td class="k num-col">5 min</td><td class="k">Resultados</td><td>El sintético común y su dataset, cada uno contra su línea base de píxeles crudos. Curvas de entrenamiento incluidas.</td></tr>
         <tr><td class="k num-col">4 min</td><td class="k">Qué falló</td><td>El bloque más valioso. Qué probaron que no funcionó y qué creen que pasó.</td></tr>
         <tr><td class="k num-col">3 min</td><td class="k">Preguntas</td><td>Del grupo y nuestras.</td></tr>
       </tbody>
@@ -2039,25 +2042,27 @@ python scripts/run_train.py --config configs/mnist.yaml</pre>
   <div class="fill">
     <table>
       <thead><tr>
-        <th style="width:13%">Equipo</th><th style="width:18%">Dataset propio</th>
-        <th style="width:11%">Backbone</th><th style="width:9%">Dim</th>
-        <th style="width:12%">R@1 MNIST</th><th style="width:12%">R@1 propio</th><th>Extras</th>
+        <th style="width:12%">Equipo</th><th style="width:15%">Dataset propio</th>
+        <th style="width:11%">Backbone</th><th style="width:7%">Dim</th>
+        <th style="width:11%">R@1 común</th><th style="width:11%">R@1 propio</th>
+        <th style="width:13%">Píxeles propio</th><th>Extras</th>
       </tr></thead>
       <tbody>
-        <tr><td class="k">1</td><td colspan="6" style="color:var(--ink-faint)">se llena en clase</td></tr>
-        <tr><td class="k">2</td><td colspan="6" style="color:var(--ink-faint)">&nbsp;</td></tr>
-        <tr><td class="k">3</td><td colspan="6" style="color:var(--ink-faint)">&nbsp;</td></tr>
-        <tr><td class="k">4</td><td colspan="6" style="color:var(--ink-faint)">&nbsp;</td></tr>
+        <tr><td class="k" style="color:var(--ink-faint)">Píxeles crudos</td><td style="color:var(--ink-faint)">—</td><td style="color:var(--ink-faint)">sin modelo</td><td style="color:var(--ink-faint)">—</td><td class="num-col" style="color:var(--ink-faint)">≈ 0.69</td><td colspan="3" style="color:var(--ink-faint)">el piso: un modelo que no lo supera no aprendió nada</td></tr>
+        <tr><td class="k">1</td><td colspan="7" style="color:var(--ink-faint)">se llena en clase</td></tr>
+        <tr><td class="k">2</td><td colspan="7" style="color:var(--ink-faint)">&nbsp;</td></tr>
+        <tr><td class="k">3</td><td colspan="7" style="color:var(--ink-faint)">&nbsp;</td></tr>
+        <tr><td class="k">4</td><td colspan="7" style="color:var(--ink-faint)">&nbsp;</td></tr>
       </tbody>
     </table>
     <div class="cols c2" style="margin-top:24px">
       <div class="card">
         <h3>La columna que compara</h3>
-        <p class="small" style="color:var(--ink-soft)"><strong>R@1 en MNIST</strong> es la única cifra comparable entre equipos: mismo dataset, mismo split, misma evaluación. Si a alguien le sale muy baja, el problema está en su código, no en sus datos.</p>
+        <p class="small" style="color:var(--ink-soft)"><strong>R@1 en el sintético común</strong> es la única cifra comparable entre equipos: mismos datos, mismo protocolo, misma evaluación. Si a alguien le sale cerca de los píxeles (≈ 0.69), el problema está en su código, no en sus datos.</p>
       </div>
       <div class="card">
         <h3>La columna que no compara</h3>
-        <p class="small" style="color:var(--ink-soft)"><strong>R@1 en su dataset</strong> no se puede comparar entre equipos: distinto número de identidades, distinta dificultad, distinto tamaño de galería. Sirve para hablar de <em>por qué</em>, no de quién ganó.</p>
+        <p class="small" style="color:var(--ink-soft)"><strong>R@1 en su dataset</strong> no se puede comparar entre equipos: distinto número de identidades, distinta dificultad, distinto tamaño de galería. Sirve para hablar de <em>por qué</em>, no de quién ganó, y se lee contra su columna de píxeles.</p>
       </div>
     </div>
   </div>
@@ -2072,9 +2077,9 @@ python scripts/run_train.py --config configs/mnist.yaml</pre>
   </div>
   <div class="fill">
     <div class="vlist" style="gap:14px">
-      <div class="card"><p class="body" style="max-width:none"><strong>1 · ¿Las diferencias vienen de los datos o de los hiperparámetros?</strong><br><span class="small">Si dos equipos con el mismo backbone tienen resultados muy distintos en MNIST, la respuesta está en el split o en las augmentations.</span></p></div>
+      <div class="card"><p class="body" style="max-width:none"><strong>1 · ¿Las diferencias vienen de los datos o de los hiperparámetros?</strong><br><span class="small">Si dos equipos con el mismo backbone tienen resultados muy distintos en el sintético común, la respuesta está en el split o en las augmentations.</span></p></div>
       <div class="card"><p class="body" style="max-width:none"><strong>2 · ¿A quién le ganó DINOv2 congelado?</strong><br><span class="small">Si un modelo preentrenado sin entrenamiento le gana a un modelo propio, hay que preguntarse qué aportó el entrenamiento.</span></p></div>
-      <div class="card"><p class="body" style="max-width:none"><strong>3 · ¿Quién tuvo el dataset más difícil, y cómo lo sabemos?</strong><br><span class="small">Número de identidades, imágenes por identidad, variación intra-clase. Un recall bajo en un problema difícil vale más que uno alto en MNIST.</span></p></div>
+      <div class="card"><p class="body" style="max-width:none"><strong>3 · ¿Quién tuvo el dataset más difícil, y cómo lo sabemos?</strong><br><span class="small">Número de identidades, imágenes por identidad, variación intra-clase. Un recall bajo en un problema difícil vale más que uno alto en un problema fácil.</span></p></div>
       <div class="card"><p class="body" style="max-width:none"><strong>4 · ¿Qué habrían hecho distinto con otra semana?</strong><br><span class="small">Casi siempre la respuesta es “mirar los datos antes”. Que salga de ustedes.</span></p></div>
     </div>
   </div>
