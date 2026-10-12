@@ -66,7 +66,7 @@ código; lo que falta es lo que toca los datos.
 Las tres piezas de `data.py`:
 
 - `IdentityImageDataset` (~40 líneas)
-- `make_open_set_split` (~30 líneas)
+- `make_open_set_split` (~35 líneas)
 - `build_transforms` (~15 líneas)
 
 Más el trabajo real: elegir dataset, convertirlo a carpeta-por-identidad,
@@ -83,6 +83,11 @@ cp _solucion/data.py src/embeddings/data.py
 pytest && python scripts/run_train.py --config configs/synthetic.yaml
 git checkout src/embeddings/data.py
 ```
+
+Junto a ella, sin versionar: `_solucion/acordeon.md` (acordeón del profesor: las
+soluciones de todos los puntos extra y qué revisar al calificar),
+`_solucion/extras.py` (esas soluciones en código) y `_solucion/probar_extras.py`
+(las corre todas sobre el sintético común).
 
 ### La evaluación va congelada
 
@@ -110,6 +115,22 @@ Dentro de prueba, `gallery_frac` (0.5) de las imágenes de cada identidad van a
 galería y el resto a queries. Las identidades con menos de `min_images` (2) se
 descartan por completo: no sirven para entrenar, y en prueba no pueden estar a
 la vez en galería y en queries. MNIST fija su split con `test_ids: ["8", "9"]`.
+
+**Validación con identidades conocidas** (decidido el 2026-10-12): `val_frac`
+(0.1) de las fotos de cada identidad de entrenamiento con 3 o más imágenes se
+apartan para validación. `train.py` las compara contra los centros de ArcFace
+(exactitud, con la pérdida para desempatar) y con eso elige `best.pt`. Prueba se
+evalúa una sola vez, al final. Es el esquema de qface:
+
+- Antes, `train.py` elegía la época por el R@1 de prueba: una fuga. Inflaba MNIST
+  de 0.968 a 0.978.
+- La validación closed-set sale optimista y no detecta sobreajuste open-set, pero
+  solo ordena épocas; en nuestras corridas, la mejor y la última época de prueba
+  difieren 0.00–0.01.
+- No se parte en tres por identidad porque aquí las identidades son lo escaso
+  (MNIST tiene 8 de entrenamiento). Con datos de sobra sería lo correcto; la
+  lámina del split lo menciona.
+- La validación usa un generador aparte: cambiar `val_frac` no mueve prueba.
 
 ### Datasets
 
@@ -150,7 +171,7 @@ tiene una Mac con MPS o una PC gamer. Todo debe correr en CPU con pocas clases.
 
 50% resultado técnico + 50% presentación. Un modelo con malos números y buen
 análisis saca ~8; buenos números sin explicación, no. Máximo **2 puntos extra**,
-uno por cosa (triplet, CosFace, sampler balanceado, fine-tuning por capas,
+uno por cosa (triplet, ArcFace sin `acos`, CosFace, sampler balanceado, fine-tuning por capas,
 ablación de head/dimensión, baseline DINOv2 congelado, índice FAISS/HNSW).
 
 ## Convenciones de código
@@ -181,7 +202,7 @@ material:
 
 ## Material
 
-`slides/embeddings.html` — un solo archivo autocontenido, 51 láminas, 16:9.
+`slides/embeddings.html` — un solo archivo autocontenido, 53 láminas, 16:9.
 Navegación: `←` `→` navegar, `O` índice, `S` notas del ponente, `F` pantalla
 completa. `Cmd+P` en Chrome saca el PDF.
 

@@ -56,3 +56,13 @@ def test_train_transform_keeps_shape(tree):
     train_tf, _ = build_transforms(image_size=24)
     image, _ = IdentityImageDataset(all_items(tree), train_tf)[0]
     assert image.shape == (1, 24, 24)
+
+
+def test_label_is_position_of_sorted_name(tree):
+    # train.py etiqueta la validación con esta misma regla
+    items = all_items(tree)
+    _, eval_tf = build_transforms(image_size=24)
+    ds = IdentityImageDataset(items, eval_tf)
+    names = sorted(set(ds.identities))
+    for k in (0, len(ds) // 2, len(ds) - 1):
+        assert ds[k][1] == names.index(ds.identities[k])

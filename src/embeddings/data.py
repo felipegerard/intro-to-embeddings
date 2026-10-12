@@ -34,6 +34,7 @@ IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".webp"}
 @dataclass
 class Split:
     train: list[Item]
+    val: list[Item]
     gallery: list[Item]
     query: list[Item]
 
@@ -43,6 +44,7 @@ def make_open_set_split(
     test_frac: float = 0.3,
     test_ids: list[str] | None = None,
     gallery_frac: float = 0.5,
+    val_frac: float = 0.1,
     min_images: int = 2,
     seed: int = 0,
 ) -> Split:
@@ -63,6 +65,16 @@ def make_open_set_split(
        Todas las imágenes de una identidad de entrenamiento van a `train`.
     4. Para cada identidad de prueba, mandar ~`gallery_frac` de sus imágenes a
        `gallery` y el resto a `query`, dejando al menos una de cada lado.
+    5. Validación: de cada identidad de entrenamiento con al menos 3 imágenes,
+       apartar ~`val_frac` de ellas (al menos 1) a `val`, dejando 2 o más en
+       `train`. Con `val_frac = 0`, `val` queda vacía.
+
+    Para qué sirve `val`: `train.py` la compara contra los centros de ArcFace
+    al final de cada época y se queda con la mejor. Son identidades que el
+    modelo ya conoce, así que ese número sale optimista; no importa, porque
+    solo se usa para ordenar épocas. Prueba se evalúa una sola vez, al final.
+    Háganla después de armar prueba: cambiar `val_frac` no debe mover el split
+    de prueba.
 
     La regla que no se puede romper: **ninguna identidad aparece en
     entrenamiento y en prueba a la vez.** Repartir imágenes primero e
@@ -72,7 +84,7 @@ def make_open_set_split(
     carpetas y archivos antes de barajar, porque el orden de `iterdir()` depende
     del sistema operativo.
 
-    Devuelve un `Split` con tres listas de `(ruta, identidad)`.
+    Devuelve un `Split` con cuatro listas de `(ruta, identidad)`.
     """
     raise NotImplementedError(
         "make_open_set_split: esta función la implementan ustedes. "
@@ -86,9 +98,9 @@ class IdentityImageDataset(Dataset):
     Recibe una lista de `(ruta, identidad)`, como las de `Split`, y una
     transformación. Tiene que:
 
-    - asignar a cada identidad un entero de clase, de 0 a `num_classes - 1`,
-      ordenando los nombres para que sea determinista. ArcFace necesita esos
-      enteros, y solo existen durante el entrenamiento;
+    - asignar a cada identidad un entero de clase: su posición en la lista
+      ordenada de nombres, de 0 a `num_classes - 1`. ArcFace necesita esos
+      enteros, y `train.py` usa la misma regla para etiquetar la validación;
     - en `__getitem__(i)`: abrir la imagen con PIL, convertirla a `"L"` (gris)
       o `"RGB"` según `grayscale`, aplicarle `transform` y devolver
       `(tensor, entero_de_clase)`;

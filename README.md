@@ -33,7 +33,7 @@ qué hace cada pieza y dónde están las trampas.
 
 | Pieza | Qué hace |
 |---|---|
-| `make_open_set_split` | Reparte **identidades** entre entrenamiento y prueba, y dentro de prueba reparte imágenes entre galería y queries |
+| `make_open_set_split` | Reparte **identidades** entre entrenamiento y prueba; dentro de prueba reparte imágenes entre galería y queries, y aparta unas fotos de entrenamiento para validación |
 | `IdentityImageDataset` | Carga cada imagen, le asigna su entero de clase y expone `paths`, `identities` y `num_classes` |
 | `build_transforms` | Augmentations de entrenamiento y un preprocesamiento determinista para evaluar |
 
@@ -105,8 +105,13 @@ python scripts/run_train.py --config configs/synthetic.yaml --set backbone=resne
 - Backbones: `small_cnn` (desde cero, corre en CPU), `resnet18` y
   `mobilenet_v3_small` (preentrenados).
 
-Cada corrida escribe en `runs/<nombre>/` la configuración, `metrics.csv` con las
-métricas por época y `best.pt` con el mejor modelo según Recall@1.
+Cada corrida escribe en `runs/<nombre>/` la configuración, `metrics.csv` con la
+pérdida y la validación por época, `best.pt` con la época que eligió la
+validación, y `test.json` con la evaluación de prueba.
+
+Prueba se evalúa **una sola vez**, al final, con esa época. No elijan épocas ni
+hiperparámetros mirando prueba: eso la convierte en parte del entrenamiento y
+el número que reportan sale inflado.
 
 ## La línea base: píxeles crudos
 
@@ -125,6 +130,7 @@ reportarla para sus dos datasets.
 Máximo 2, uno por cada cosa:
 
 - Triplet loss con batch-hard (`TripletLoss` en `losses.py`), comparada contra ArcFace
+- ArcFace sin `acos`, con la identidad trigonométrica de cos(θ + m)
 - CosFace
 - Sampler balanceado por clase
 - Fine-tuning por capas

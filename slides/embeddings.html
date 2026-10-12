@@ -213,6 +213,7 @@ body:not(.show-index) #index{display:none}
     <h1>Embeddings para imágenes</h1>
     <p class="lede" style="margin-top:20px">Cómo enseñarle a una red a medir parecido, y no solo a repartir etiquetas.</p>
     <div class="meta">
+      <div><dt>Imparte</dt><dd>Felipe Gerard Valdés</dd></div>
       <div><dt>Duración</dt><dd>3 sesiones · 6 horas</dd></div>
       <div><dt>Requisitos</dt><dd>Machine learning · Deep learning</dd></div>
       <div><dt>Entregable</dt><dd>Ejercicio por equipo</dd></div>
@@ -738,7 +739,7 @@ body:not(.show-index) #index{display:none}
 <!-- ============ LOSS 1 ============ -->
 <section class="slide" data-sec="Sesión 1 · Funciones de pérdida" data-title="Qué le pedimos a la pérdida">
   <div class="head">
-    <p class="eyebrow">Pérdidas · 1 de 6</p>
+    <p class="eyebrow">Pérdidas · 1 de 8</p>
     <h2>Todo se reduce a dos fuerzas</h2>
   </div>
   <div class="fill">
@@ -798,140 +799,244 @@ body:not(.show-index) #index{display:none}
 <!-- ============ LOSS 2 ============ -->
 <section class="slide" data-sec="Sesión 1 · Funciones de pérdida" data-title="Contrastive y triplet">
   <div class="head">
-    <p class="eyebrow">Pérdidas · 2 de 6</p>
+    <p class="eyebrow">Pérdidas · 2 de 8</p>
     <h2>La familia clásica: comparar pares y tercias</h2>
   </div>
   <div class="fill">
     <div class="cols c2-62" style="align-items:center">
       <figure>
-        <svg viewBox="0 0 560 300" role="img" aria-label="Pérdida de tripleta: el ancla se acerca al positivo y se aleja del negativo hasta que la diferencia de distancias supera el margen.">
-          <circle cx="150" cy="130" r="112" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".22" stroke-dasharray="4 5"/>
-          <line x1="150" y1="130" x2="106" y2="66" stroke="var(--c-pos)" stroke-width="2.6"/>
-          <line x1="150" y1="130" x2="254" y2="192" stroke="var(--c-neg)" stroke-width="2.6"/>
-          <circle cx="150" cy="130" r="11" fill="var(--ink)"/>
-          <circle cx="106" cy="66" r="10" fill="var(--c-pos)"/>
-          <rect x="245" y="183" width="19" height="19" rx="3" fill="var(--c-neg)"/>
-          <text x="150" y="160" text-anchor="middle" font-size="13.5" font-weight="600" fill="currentColor">ancla</text>
-          <text x="92" y="48" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--c-pos)">positivo</text>
-          <text x="284" y="212" font-size="13.5" font-weight="600" fill="var(--c-neg)">negativo</text>
-          <text x="104" y="106" text-anchor="end" font-size="12.5" fill="var(--c-pos)">d(a,p)</text>
-          <text x="216" y="152" font-size="12.5" fill="var(--c-neg)">d(a,n)</text>
-          <path d="M 68 250 L 68 268 M 68 259 L 224 259 M 224 250 L 224 268" stroke="var(--ink)" stroke-width="1.6" fill="none" opacity=".7"/>
-          <text x="146" y="288" text-anchor="middle" font-size="13" fill="currentColor" opacity=".75">margen m</text>
-          <text x="330" y="80" font-size="14" fill="currentColor" font-weight="600">se quiere:</text>
-          <text x="330" y="108" font-size="14.5" fill="currentColor" font-family="monospace">d(a,p) + m &lt; d(a,n)</text>
-          <text x="330" y="146" font-size="13.5" fill="currentColor" opacity=".7">si ya se cumple,</text>
-          <text x="330" y="166" font-size="13.5" fill="currentColor" opacity=".7">la pérdida es exactamente 0</text>
-          <text x="330" y="186" font-size="13.5" fill="var(--c-5)" font-weight="600">y no hay gradiente</text>
+        <svg viewBox="0 0 600 300" role="img" aria-label="Regla de distancias desde el ancla. Si el negativo ya está más lejos que el positivo más el margen, la pérdida es cero; si invade la banda del margen, la pérdida es lo que invade y el gradiente lo empuja hacia afuera.">
+          <defs><marker id="arT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--c-5)"/></marker></defs>
+          <text x="40" y="36" font-size="13.5" font-weight="600" fill="currentColor">Caso 1 · el negativo ya está lejos</text>
+          <rect x="200" y="62" width="120" height="36" fill="currentColor" fill-opacity=".09"/>
+          <line x1="40" y1="80" x2="580" y2="80" stroke="currentColor" stroke-width="1.4" opacity=".4"/>
+          <text x="260" y="56" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor">m</text>
+          <circle cx="60" cy="80" r="9" fill="var(--ink)"/>
+          <circle cx="200" cy="80" r="8" fill="var(--c-pos)"/>
+          <rect x="442" y="72" width="16" height="16" rx="2.5" fill="var(--c-neg)"/>
+          <text x="60" y="110" text-anchor="middle" font-size="12" fill="currentColor">ancla</text>
+          <text x="200" y="110" text-anchor="middle" font-size="12" fill="var(--c-pos)" font-weight="600">positivo</text>
+          <text x="450" y="110" text-anchor="middle" font-size="12" fill="currentColor" font-weight="600">negativo</text>
+          <text x="40" y="138" font-size="13" fill="currentColor" opacity=".8">d(a,n) ≥ d(a,p) + m  ⇒  L = 0: no hay nada que aprender</text>
+          <text x="40" y="178" font-size="13.5" font-weight="600" fill="currentColor">Caso 2 · el negativo invade la banda</text>
+          <rect x="200" y="204" width="120" height="36" fill="currentColor" fill-opacity=".09"/>
+          <line x1="40" y1="222" x2="580" y2="222" stroke="currentColor" stroke-width="1.4" opacity=".4"/>
+          <rect x="272" y="204" width="48" height="36" fill="var(--c-5)" fill-opacity=".28"/>
+          <line x1="286" y1="194" x2="342" y2="194" stroke="var(--c-5)" stroke-width="2.2" marker-end="url(#arT)"/>
+          <text x="286" y="188" font-size="11.5" font-weight="600" fill="var(--c-5)">lo empuja</text>
+          <circle cx="60" cy="222" r="9" fill="var(--ink)"/>
+          <circle cx="200" cy="222" r="8" fill="var(--c-pos)"/>
+          <rect x="264" y="214" width="16" height="16" rx="2.5" fill="var(--c-neg)"/>
+          <text x="60" y="252" text-anchor="middle" font-size="12" fill="currentColor">ancla</text>
+          <text x="200" y="252" text-anchor="middle" font-size="12" fill="var(--c-pos)" font-weight="600">positivo</text>
+          <text x="272" y="252" text-anchor="middle" font-size="12" fill="currentColor" font-weight="600">negativo</text>
+          <text x="40" y="280" font-size="13" fill="currentColor" opacity=".8">L = d(a,p) + m − d(a,n): exactamente el tramo invadido</text>
         </svg>
+        <figcaption>Distancias medidas desde el ancla sobre una recta. La banda gris mide m y empieza en el positivo: el negativo tiene que quedar fuera de ella.</figcaption>
       </figure>
       <div class="vlist">
         <div class="card">
-          <h3>Contrastive</h3>
-          <p class="small" style="color:var(--ink-soft)">Trabaja con <strong>pares</strong>. Acerca los iguales hasta cero; aleja los distintos hasta un margen fijo. Simple, pero exige que todos los cúmulos tengan el mismo radio.</p>
+          <h3>Triplet</h3>
+          <div class="formula" style="font-size:15.5px;padding:10px 13px;margin:6px 0 8px">L = max(0, d(a,p) − d(a,n) + m)</div>
+          <p class="small" style="color:var(--ink-soft)">Pide que el negativo quede al menos <strong>m más lejos</strong> que el positivo. No le importan las distancias absolutas, solo el orden.</p>
         </div>
         <div class="card">
-          <h3>Triplet</h3>
-          <p class="small" style="color:var(--ink-soft)">Trabaja con <strong>tercias</strong>. No pide distancias absolutas, solo que el positivo esté más cerca que el negativo por un margen. Más flexible, y durante años fue el estándar.</p>
+          <h3>Contrastive</h3>
+          <div class="formula" style="font-size:15.5px;padding:10px 13px;margin:6px 0 8px">L = y·d² + (1 − y)·max(0, m − d)²</div>
+          <p class="small" style="color:var(--ink-soft)">Trabaja con <strong>pares</strong>; y = 1 si son la misma identidad. Acerca los iguales hasta d = 0 y aleja los distintos solo hasta m.</p>
         </div>
         <div class="card flat">
-          <p class="small" style="color:var(--ink-soft)"><strong>El detalle que lo cambia todo:</strong> la pérdida es cero para cualquier tercia que ya cumple la condición. Y eso, en un dataset normal, es casi todas.</p>
+          <p class="small" style="color:var(--ink-soft)"><strong>El detalle que lo cambia todo:</strong> en el caso 1 la pérdida es cero y no hay gradiente. En un dataset normal, casi todas las tercias caen ahí.</p>
         </div>
       </div>
     </div>
   </div>
+  <div class="notes">Dibuja la regla en el pizarrón si hace falta: ancla en 0, positivo, banda de ancho m. Toda la lámina siguiente usa la misma regla.</div>
 </section>
 
 <!-- ============ LOSS 3 ============ -->
 <section class="slide" data-sec="Sesión 1 · Funciones de pérdida" data-title="El problema del muestreo">
   <div class="head">
-    <p class="eyebrow">Pérdidas · 3 de 6</p>
-    <h2>El 99% de las tercias no enseña nada</h2>
+    <p class="eyebrow">Pérdidas · 3 de 8</p>
+    <h2>Al final del entrenamiento, el 98.6% de las tercias no enseña nada</h2>
   </div>
   <div class="fill">
     <div class="cols c2-62" style="align-items:center">
       <figure>
-        <svg viewBox="0 0 580 300" role="img" aria-label="Zonas de tripletas alrededor del ancla: las fáciles quedan lejos y dan gradiente cero, las semiduras caen dentro del margen y son útiles, las duras están más cerca que el positivo y desestabilizan el entrenamiento.">
-          <circle cx="180" cy="150" r="62" fill="var(--c-pos)" opacity=".08"/>
-          <circle cx="180" cy="150" r="104" fill="var(--c-neg)" opacity=".1"/>
-          <circle cx="180" cy="150" r="62" fill="none" stroke="var(--c-pos)" stroke-width="1.6" stroke-dasharray="5 4"/>
-          <circle cx="180" cy="150" r="104" fill="none" stroke="var(--c-neg)" stroke-width="1.6" stroke-dasharray="5 4"/>
-          <circle cx="180" cy="150" r="140" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".25"/>
-          <circle cx="180" cy="150" r="10" fill="var(--ink)"/>
-          <text x="180" y="176" text-anchor="middle" font-size="12" fill="currentColor">ancla</text>
-          <circle cx="222" cy="112" r="8" fill="var(--c-pos)"/>
-          <text x="238" y="106" font-size="11.5" fill="var(--c-pos)" font-weight="600">pos</text>
-          <g fill="var(--c-5)"><rect x="152" y="108" width="13" height="13" rx="2"/><rect x="196" y="176" width="13" height="13" rx="2"/></g>
-          <g fill="var(--c-neg)"><rect x="118" y="98" width="13" height="13" rx="2"/><rect x="242" y="196" width="13" height="13" rx="2"/><rect x="98" y="188" width="13" height="13" rx="2"/></g>
-          <g fill="currentColor" opacity=".45"><rect x="70" y="60" width="13" height="13" rx="2"/><rect x="284" y="76" width="13" height="13" rx="2"/>
-            <rect x="292" y="238" width="13" height="13" rx="2"/><rect x="58" y="252" width="13" height="13" rx="2"/><rect x="300" y="150" width="13" height="13" rx="2"/></g>
-          <text x="180" y="26" text-anchor="middle" font-size="12.5" fill="currentColor" opacity=".55">fáciles · gradiente 0</text>
+        <svg viewBox="0 0 580 330" role="img" aria-label="Histogramas de la diferencia entre la distancia al negativo y la distancia al positivo, al principio y al final del entrenamiento. Al final casi todas las tercias caen en la zona fácil, donde no hay gradiente.">
+          <rect x="50.0" y="30" width="204.0" height="260" fill="var(--c-5)" fill-opacity=".2"/><text x="152.0" y="22" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">dura</text><rect x="254.0" y="30" width="40.8" height="260" fill="var(--c-neg)" fill-opacity=".2"/><text x="274.4" y="22" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">semidura</text><rect x="294.8" y="30" width="265.2" height="260" fill="currentColor" fill-opacity=".07"/><text x="427.4" y="22" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">fácil · sin gradiente</text>
+          <line x1="50" y1="148" x2="560" y2="148" stroke="currentColor" stroke-width="1.2" opacity=".45"/>
+          <rect x="51.0" y="148.0" width="10.8" height="0.0" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="63.8" y="147.9" width="10.8" height="0.1" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="76.5" y="147.7" width="10.8" height="0.3" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="89.2" y="147.2" width="10.8" height="0.8" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="102.0" y="146.7" width="10.8" height="1.3" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="114.8" y="145.5" width="10.8" height="2.5" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="127.5" y="144.7" width="10.8" height="3.3" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="140.2" y="143.4" width="10.8" height="4.6" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="153.0" y="141.3" width="10.8" height="6.7" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="165.8" y="139.3" width="10.8" height="8.7" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="178.5" y="135.5" width="10.8" height="12.5" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="191.2" y="132.2" width="10.8" height="15.8" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="204.0" y="126.4" width="10.8" height="21.6" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="216.8" y="118.9" width="10.8" height="29.1" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="229.5" y="106.7" width="10.8" height="41.3" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="242.2" y="84.7" width="10.8" height="63.3" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="255.0" y="51.8" width="10.8" height="96.2" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="267.8" y="44.0" width="10.8" height="104.0" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="280.5" y="53.7" width="10.8" height="94.3" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="293.2" y="63.6" width="10.8" height="84.4" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="306.0" y="73.3" width="10.8" height="74.7" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="318.8" y="81.1" width="10.8" height="66.9" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="331.5" y="87.5" width="10.8" height="60.5" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="344.2" y="93.6" width="10.8" height="54.4" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="357.0" y="97.5" width="10.8" height="50.5" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="369.8" y="100.2" width="10.8" height="47.8" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="382.5" y="102.0" width="10.8" height="46.0" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="395.2" y="106.1" width="10.8" height="41.9" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="408.0" y="108.2" width="10.8" height="39.8" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="420.8" y="113.1" width="10.8" height="34.9" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="433.5" y="117.2" width="10.8" height="30.8" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="446.2" y="124.1" width="10.8" height="23.9" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="459.0" y="133.2" width="10.8" height="14.8" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="471.8" y="143.0" width="10.8" height="5.0" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="484.5" y="147.7" width="10.8" height="0.3" fill="var(--ink)" fill-opacity=".6"/>
+          <text x="556" y="50" text-anchor="end" font-size="12.5" font-weight="600" fill="currentColor">época 1 · 55.7% fáciles</text>
+          <line x1="50" y1="288" x2="560" y2="288" stroke="currentColor" stroke-width="1.2" opacity=".45"/>
+          <rect x="165.8" y="288.0" width="10.8" height="0.0" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="178.5" y="288.0" width="10.8" height="0.0" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="191.2" y="288.0" width="10.8" height="0.0" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="204.0" y="287.9" width="10.8" height="0.1" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="216.8" y="287.9" width="10.8" height="0.1" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="229.5" y="287.7" width="10.8" height="0.3" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="242.2" y="287.4" width="10.8" height="0.6" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="255.0" y="286.7" width="10.8" height="1.3" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="267.8" y="285.6" width="10.8" height="2.4" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="280.5" y="282.9" width="10.8" height="5.1" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="293.2" y="278.8" width="10.8" height="9.2" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="306.0" y="271.0" width="10.8" height="17.0" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="318.8" y="259.9" width="10.8" height="28.1" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="331.5" y="246.0" width="10.8" height="42.0" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="344.2" y="227.6" width="10.8" height="60.4" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="357.0" y="209.3" width="10.8" height="78.7" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="369.8" y="193.0" width="10.8" height="95.0" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="382.5" y="184.0" width="10.8" height="104.0" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="395.2" y="184.8" width="10.8" height="103.2" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="408.0" y="197.8" width="10.8" height="90.2" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="420.8" y="219.6" width="10.8" height="68.4" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="433.5" y="241.8" width="10.8" height="46.2" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="446.2" y="262.3" width="10.8" height="25.7" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="459.0" y="276.1" width="10.8" height="11.9" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="471.8" y="283.7" width="10.8" height="4.3" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="484.5" y="286.8" width="10.8" height="1.2" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="497.2" y="287.8" width="10.8" height="0.2" fill="var(--ink)" fill-opacity=".6"/>
+          <rect x="510.0" y="288.0" width="10.8" height="0.0" fill="var(--ink)" fill-opacity=".6"/>
+          <text x="556" y="190" text-anchor="end" font-size="12.5" font-weight="600" fill="currentColor">época 15 · 98.6% fáciles</text>
+          <g font-size="11.5" fill="currentColor" opacity=".7"><text x="50.0" y="308" text-anchor="middle">−1</text><text x="152.0" y="308" text-anchor="middle">−0.5</text><text x="254.0" y="308" text-anchor="middle">0</text><text x="294.8" y="308" text-anchor="middle">m</text><text x="356.0" y="308" text-anchor="middle">0.5</text><text x="458.0" y="308" text-anchor="middle">1</text><text x="560.0" y="308" text-anchor="middle">1.5</text></g>
+          <text x="305" y="326" text-anchor="middle" font-size="12" fill="currentColor" opacity=".75">d(a,n) − d(a,p): la misma regla de la lámina anterior, medida desde el positivo</text>
         </svg>
+        <figcaption>200 000 tercias al azar del sintético común, con un modelo entrenado con ArcFace y margen m = 0.2.</figcaption>
       </figure>
       <div class="vlist">
         <table>
-          <thead><tr><th style="width:30%">Tipo</th><th style="width:26%">Frecuencia</th><th>Qué hace</th></tr></thead>
+          <thead><tr><th>Época</th><th>Fácil</th><th>Semidura</th><th>Dura</th></tr></thead>
           <tbody>
-            <tr><td class="k" style="color:var(--ink-faint)">Fácil</td><td class="num-col">~99%</td><td>Ya cumple el margen. Pérdida 0, gradiente 0.</td></tr>
-            <tr><td class="k" style="color:var(--c-neg)">Semidura</td><td class="num-col">~1%</td><td>Cae dentro del margen. <em>Es la que quieres.</em></td></tr>
-            <tr><td class="k" style="color:var(--c-5)">Dura</td><td class="num-col">&lt;0.1%</td><td>Negativo más cerca que el positivo. A menudo es una etiqueta mal puesta y colapsa el entrenamiento.</td></tr>
+            <tr><td class="k num-col">0</td><td class="num-col">0.0%</td><td class="num-col">80.9%</td><td class="num-col">19.1%</td></tr>
+            <tr><td class="k num-col">1</td><td class="num-col">55.7%</td><td class="num-col">26.4%</td><td class="num-col">17.9%</td></tr>
+            <tr><td class="k num-col">3</td><td class="num-col">83.9%</td><td class="num-col">12.4%</td><td class="num-col">3.8%</td></tr>
+            <tr><td class="k num-col">15</td><td class="num-col">98.6%</td><td class="num-col">1.3%</td><td class="num-col">0.1%</td></tr>
           </tbody>
         </table>
+        <ul class="ticks" style="font-size:15.5px;gap:8px">
+          <li><strong>Fácil</strong>: ya cumple el margen. Pérdida 0, gradiente 0.</li>
+          <li><strong>Semidura</strong>: dentro de la banda. <em>Es la que enseña.</em></li>
+          <li><strong>Dura</strong>: el negativo está más cerca que el positivo. A menudo es una etiqueta mal puesta.</li>
+        </ul>
         <div class="card flat">
-          <p class="small" style="color:var(--ink-soft)">De ahí nace toda una industria: <strong>minería de negativos</strong>, batch-hard, semi-hard, muestreo PK, colas de memoria. Media década de literatura dedicada a resolver un problema que la pérdida se creó sola.</p>
+          <p class="small" style="color:var(--ink-soft)">Entre mejor el modelo, menos tercias útiles quedan. De ahí la <strong>minería de negativos</strong>: batch-hard, semi-hard, muestreo PK. Media década resolviendo un problema que la pérdida se creó sola.</p>
         </div>
       </div>
     </div>
   </div>
-  <div class="notes">Aquí es donde justificamos por qué el ejercicio NO usa triplet. Es un problema de ingeniería de muestreo, no de aprendizaje, y hay una salida más limpia.</div>
+  <div class="notes">Números medidos con _experimentos/tercias.py. Dato curioso de la época 0: la red sin entrenar amontona todos los embeddings, así que ninguna tercia cumple el margen todavía.</div>
 </section>
 
 <!-- ============ LOSS 4 ============ -->
-<section class="slide" data-sec="Sesión 1 · Funciones de pérdida" data-title="De comparar pares a clasificar con margen">
+<section class="slide" data-sec="Sesión 1 · Funciones de pérdida" data-title="Prototipos: qué es W">
   <div class="head">
-    <p class="eyebrow">Pérdidas · 4 de 6</p>
-    <h2>El giro: volver a clasificar, pero con margen</h2>
+    <p class="eyebrow">Pérdidas · 4 de 8</p>
+    <h2>El giro: un prototipo aprendido por identidad</h2>
   </div>
   <div class="fill">
-    <div class="vlist" style="gap:18px">
-      <p class="body" style="max-width:none">En vez de armar tercias, volvemos al softmax de toda la vida y le hacemos <strong>tres modificaciones</strong>. Cada una quita un grado de libertad que no queríamos.</p>
-      <div class="cols c3" style="gap:18px">
-        <div class="card">
-          <span class="tag">1</span>
-          <h3 style="margin-top:12px">Quitar el sesgo</h3>
-          <div class="formula" style="font-size:15.5px;padding:10px 13px;margin:8px 0 10px">Wⱼᵀz + bⱼ  →  Wⱼᵀz</div>
-          <p class="small" style="color:var(--ink-soft)">El sesgo desplaza la frontera sin decir nada de la dirección. Fuera.</p>
+    <div class="cols c2-38" style="align-items:center;grid-template-columns:.8fr 1fr">
+      <figure>
+        <svg viewBox="0 0 440 390" role="img" aria-label="Esfera unitaria con tres prototipos de clase dibujados como estrellas, cada uno con una flecha fuerte desde el origen, y los embeddings de cada identidad alrededor de su prototipo con flechas tenues desde el origen.">
+          <defs><marker id="arPrp" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--c-pos)"/></marker><marker id="arPrn" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--c-neg)"/></marker><marker id="arPrt" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--c-3)"/></marker></defs>
+          <circle cx="220" cy="190" r="150" fill="var(--green-tint)" fill-opacity=".4" stroke="var(--green)" stroke-width="1.6"/>
+          <line x1="220" y1="190" x2="267.0" y2="45.4" stroke="var(--c-pos)" stroke-width="1.3" opacity=".22"/>
+          <line x1="220" y1="190" x2="284.0" y2="58.8" stroke="var(--c-pos)" stroke-width="1.3" opacity=".22"/>
+          <line x1="220" y1="190" x2="321.4" y2="85.0" stroke="var(--c-pos)" stroke-width="1.3" opacity=".22"/>
+          <line x1="220" y1="190" x2="336.6" y2="102.1" stroke="var(--c-pos)" stroke-width="1.3" opacity=".22"/>
+          <line x1="220" y1="190" x2="68.1" y2="195.3" stroke="var(--c-neg)" stroke-width="1.3" opacity=".22"/>
+          <line x1="220" y1="190" x2="74.8" y2="174.7" stroke="var(--c-neg)" stroke-width="1.3" opacity=".22"/>
+          <line x1="220" y1="190" x2="86.6" y2="130.6" stroke="var(--c-neg)" stroke-width="1.3" opacity=".22"/>
+          <line x1="220" y1="190" x2="97.6" y2="110.5" stroke="var(--c-neg)" stroke-width="1.3" opacity=".22"/>
+          <line x1="220" y1="190" x2="251.6" y2="338.7" stroke="var(--c-3)" stroke-width="1.3" opacity=".22"/>
+          <line x1="220" y1="190" x2="230.2" y2="335.6" stroke="var(--c-3)" stroke-width="1.3" opacity=".22"/>
+          <line x1="220" y1="190" x2="184.7" y2="331.7" stroke="var(--c-3)" stroke-width="1.3" opacity=".22"/>
+          <line x1="220" y1="190" x2="163.0" y2="324.4" stroke="var(--c-3)" stroke-width="1.3" opacity=".22"/>
+          <line x1="220" y1="190" x2="297.4" y2="79.4" stroke="var(--c-pos)" stroke-width="3.2" marker-end="url(#arPrp)"/>
+          <line x1="220" y1="190" x2="89.6" y2="155.1" stroke="var(--c-neg)" stroke-width="3.2" marker-end="url(#arPrn)"/>
+          <line x1="220" y1="190" x2="208.2" y2="324.5" stroke="var(--c-3)" stroke-width="3.2" marker-end="url(#arPrt)"/>
+          <circle cx="267.0" cy="45.4" r="5.5" fill="var(--c-pos)"/>
+          <circle cx="284.0" cy="58.8" r="5.5" fill="var(--c-pos)"/>
+          <circle cx="321.4" cy="85.0" r="5.5" fill="var(--c-pos)"/>
+          <circle cx="336.6" cy="102.1" r="5.5" fill="var(--c-pos)"/>
+          <polygon points="306.0,56.1 308.9,63.1 316.5,63.7 310.7,68.7 312.5,76.0 306.0,72.1 299.6,76.0 301.3,68.7 295.6,63.7 303.1,63.1" fill="var(--c-pos)" stroke="var(--paper)" stroke-width="2"/>
+          <rect x="63.1" y="190.3" width="10" height="10" rx="1.5" fill="var(--c-neg)"/>
+          <rect x="69.8" y="169.7" width="10" height="10" rx="1.5" fill="var(--c-neg)"/>
+          <rect x="81.6" y="125.6" width="10" height="10" rx="1.5" fill="var(--c-neg)"/>
+          <rect x="92.6" y="105.5" width="10" height="10" rx="1.5" fill="var(--c-neg)"/>
+          <polygon points="75.1,140.2 78.0,147.2 85.6,147.8 79.8,152.7 81.6,160.1 75.1,156.1 68.6,160.1 70.4,152.7 64.6,147.8 72.2,147.2" fill="var(--c-neg)" stroke="var(--paper)" stroke-width="2"/>
+          <polygon points="251.6,332.7 245.6,343.7 257.6,343.7" fill="var(--c-3)"/>
+          <polygon points="230.2,329.6 224.2,340.6 236.2,340.6" fill="var(--c-3)"/>
+          <polygon points="184.7,325.7 178.7,336.7 190.7,336.7" fill="var(--c-3)"/>
+          <polygon points="163.0,318.4 157.0,329.4 169.0,329.4" fill="var(--c-3)"/>
+          <polygon points="206.9,328.4 209.8,335.4 217.4,336.0 211.6,341.0 213.4,348.3 206.9,344.4 200.5,348.3 202.2,341.0 196.5,336.0 204.0,335.4" fill="var(--c-3)" stroke="var(--paper)" stroke-width="2"/>
+          <circle cx="220" cy="190" r="4.5" fill="currentColor"/>
+          <text x="322" y="63" font-size="13" font-weight="600" fill="currentColor">W<tspan baseline-shift="sub" font-size="10">j</tspan></text>
+          <polygon points="118.0,364.0 120.1,369.1 125.6,369.5 121.4,373.1 122.7,378.5 118.0,375.6 113.3,378.5 114.6,373.1 110.4,369.5 115.9,369.1" fill="currentColor"/>
+          <text x="132" y="377" font-size="12.5" fill="currentColor">prototipo W<tspan baseline-shift="sub" font-size="9.5">j</tspan></text>
+          <circle cx="250" cy="372" r="5" fill="currentColor"/>
+          <text x="262" y="377" font-size="12.5" fill="currentColor">embedding z</text>
+        </svg>
+      </figure>
+      <div class="vlist" style="gap:12px">
+        <p class="body" style="max-width:none">Ya no comparamos pares ni tercias. Cada identidad de entrenamiento tiene un <strong>prototipo</strong> W<sub>j</sub>, y cada embedding se compara contra todos ellos.</p>
+        <div class="formula" style="font-size:16px;line-height:1.75">logit<sub>j</sub> = W<sub>j</sub>ᵀz + b<sub>j</sub><br><span style="color:var(--ink-faint);font-size:14.5px">sin sesgo, con ‖W<sub>j</sub>‖ = ‖z‖ = 1 &nbsp;→</span>&nbsp; logit<sub>j</sub> = cos θ<sub>j</sub></div>
+        <ul class="ticks" style="font-size:15.5px;gap:8px">
+          <li>W es la matriz de pesos de la capa FC de siempre: <strong>una fila por identidad</strong>.</li>
+          <li>Al normalizar, prototipos y embeddings viven en la esfera, y el logit es el <strong>ángulo</strong> al prototipo.</li>
+          <li>El softmax jala z hacia su prototipo y lo aleja de <strong>todos los demás a la vez</strong>: no hay negativos que minar.</li>
+        </ul>
+        <div class="card flat">
+          <p class="small" style="color:var(--ink-soft)"><strong>¿Por qué aprenderlo y no promediar?</strong> El promedio envejece con cada paso y no separa clases; W se actualiza con el mismo gradiente y empuja los prototipos lejos entre sí. Al converger queda cerca del promedio de su clase. Al terminar se tira.</p>
         </div>
-        <div class="card">
-          <span class="tag">2</span>
-          <h3 style="margin-top:12px">Normalizar todo</h3>
-          <div class="formula" style="font-size:15.5px;padding:10px 13px;margin:8px 0 10px">Wⱼᵀz  →  cos θⱼ</div>
-          <p class="small" style="color:var(--ink-soft)">Con ‖W<sub>j</sub>‖ = ‖z‖ = 1, el logit <em>es</em> el coseno. Cada columna de W se vuelve el centro de su clase sobre la esfera.</p>
-        </div>
-        <div class="card">
-          <span class="tag">3</span>
-          <h3 style="margin-top:12px">Meter un margen</h3>
-          <div class="formula" style="font-size:15.5px;padding:10px 13px;margin:8px 0 10px">cos θ<sub>y</sub>  →  cos(θ<sub>y</sub> + m)</div>
-          <p class="small" style="color:var(--ink-soft)">Le exigimos a la clase correcta que gane <strong>por un ángulo</strong>, no apenas.</p>
-        </div>
-      </div>
-      <div class="card flat">
-        <p class="body" style="max-width:none">Con eso, el logit ya no vive en un espacio arbitrario: <strong>es un ángulo sobre la esfera</strong>, exactamente la cantidad que vamos a usar en inferencia. Y como cada muestra se compara contra <em>todos</em> los centros de clase a la vez, no hay que elegir negativos: el softmax los recorre todos, gratis.</p>
       </div>
     </div>
   </div>
-  <div class="notes">La frase que quiero que se lleven: <b>el softmax hace la minería por ti</b>. Cada paso compara contra todas las clases.</div>
+  <div class="notes">Lo medular: pasamos de comparar ejemplos entre sí a compararlos contra prototipos. Si preguntan por promedios: center loss (Wen et al., 2016) sí mantiene centros como promedios móviles, y necesita un término aparte para separarlos. ArcFace obtiene las dos cosas de un solo softmax.</div>
 </section>
-
 <!-- ============ LOSS 5 ============ -->
 <section class="slide" data-sec="Sesión 1 · Funciones de pérdida" data-title="ArcFace: el margen angular">
   <div class="head">
-    <p class="eyebrow">Pérdidas · 5 de 6</p>
-    <h2>ArcFace</h2>
+    <p class="eyebrow">Pérdidas · 5 de 8</p>
+    <h2>Y ahora el margen: ArcFace</h2>
   </div>
   <div class="fill">
     <div class="cols c2" style="align-items:center">
       <div class="vlist">
+        <p class="body" style="max-width:none">Un solo cambio sobre la lámina anterior: en la clase correcta, <strong>cos θ<sub>y</sub> → cos(θ<sub>y</sub> + m)</strong>. Tiene que ganar por un ángulo, no apenas.</p>
         <div class="formula" style="font-size:16px;line-height:1.95">logit<sub>y</sub> = s · cos(θ<sub>y</sub> + m)<span style="color:var(--ink-faint);font-size:13.5px">   ← la clase correcta, con margen</span><br>logit<sub>j</sub> = s · cos θ<sub>j</sub><span style="color:var(--ink-faint);font-size:13.5px">        ← todas las demás, sin margen</span><br>L = cross_entropy(logits, y)</div>
         <table>
           <thead><tr><th style="width:22%">Parámetro</th><th style="width:20%">Típico</th><th>Qué controla</th></tr></thead>
@@ -974,10 +1079,95 @@ body:not(.show-index) #index{display:none}
   <div class="notes">Si preguntan por qué sumar al ángulo y no al coseno: el ángulo es una distancia geodésica sobre la esfera, así que el margen es constante en toda la esfera. Con cos θ − m el margen efectivo cambia según dónde estés.</div>
 </section>
 
+<section class="slide" data-sec="Sesión 1 · Funciones de pérdida" data-title="El margen en una gráfica">
+  <div class="head">
+    <p class="eyebrow">Pérdidas · 6 de 8</p>
+    <h2>Qué tan exigente es el margen, en una gráfica</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2" style="align-items:center;grid-template-columns:1.15fr 1fr">
+      <figure>
+        <svg viewBox="0 0 560 350" role="img" aria-label="Curvas de cos theta y cos de theta más m contra theta. La segunda está desplazada m radianes a la izquierda, así que el mismo logit exige un ángulo menor; después de pi menos m vuelve a subir.">
+          <rect x="461.4" y="40" width="58.6" height="250" fill="var(--c-5)" fill-opacity=".1"/>
+          <text x="490.7" y="75" text-anchor="middle" font-size="11.5" font-weight="600" fill="currentColor">vuelve</text>
+          <text x="490.7" y="90" text-anchor="middle" font-size="11.5" font-weight="600" fill="currentColor">a subir</text>
+          <g stroke="currentColor" stroke-width=".8" opacity=".15">
+            <line x1="60" y1="290" x2="520" y2="290"/><line x1="60" y1="228" x2="520" y2="228"/><line x1="60" y1="102" x2="520" y2="102"/><line x1="60" y1="40" x2="520" y2="40"/>
+            <line x1="175.0" y1="40" x2="175.0" y2="290"/><line x1="290.0" y1="40" x2="290.0" y2="290"/><line x1="405.0" y1="40" x2="405.0" y2="290"/>
+          </g>
+          <line x1="60" y1="165" x2="520" y2="165" stroke="currentColor" stroke-width="1.2" opacity=".45"/>
+          <line x1="60" y1="40" x2="60" y2="290" stroke="currentColor" stroke-width="1.2" opacity=".45"/>
+          <path d="M 60.0,40.0 L 62.6,40.0 L 65.1,40.1 L 67.7,40.2 L 70.2,40.3 L 72.8,40.5 L 75.3,40.7 L 77.9,40.9 L 80.4,41.2 L 83.0,41.5 L 85.6,41.9 L 88.1,42.3 L 90.7,42.7 L 93.2,43.2 L 95.8,43.7 L 98.3,44.3 L 100.9,44.8 L 103.4,45.5 L 106.0,46.1 L 108.6,46.8 L 111.1,47.5 L 113.7,48.3 L 116.2,49.1 L 118.8,49.9 L 121.3,50.8 L 123.9,51.7 L 126.4,52.7 L 129.0,53.6 L 131.6,54.6 L 134.1,55.7 L 136.7,56.7 L 139.2,57.9 L 141.8,59.0 L 144.3,60.2 L 146.9,61.4 L 149.4,62.6 L 152.0,63.9 L 154.6,65.2 L 157.1,66.5 L 159.7,67.9 L 162.2,69.2 L 164.8,70.7 L 167.3,72.1 L 169.9,73.6 L 172.4,75.1 L 175.0,76.6 L 177.6,78.2 L 180.1,79.8 L 182.7,81.4 L 185.2,83.0 L 187.8,84.7 L 190.3,86.3 L 192.9,88.0 L 195.4,89.8 L 198.0,91.5 L 200.6,93.3 L 203.1,95.1 L 205.7,96.9 L 208.2,98.8 L 210.8,100.6 L 213.3,102.5 L 215.9,104.4 L 218.4,106.3 L 221.0,108.3 L 223.6,110.2 L 226.1,112.2 L 228.7,114.2 L 231.2,116.2 L 233.8,118.2 L 236.3,120.2 L 238.9,122.2 L 241.4,124.3 L 244.0,126.4 L 246.6,128.5 L 249.1,130.5 L 251.7,132.6 L 254.2,134.8 L 256.8,136.9 L 259.3,139.0 L 261.9,141.1 L 264.4,143.3 L 267.0,145.4 L 269.6,147.6 L 272.1,149.8 L 274.7,151.9 L 277.2,154.1 L 279.8,156.3 L 282.3,158.5 L 284.9,160.6 L 287.4,162.8 L 290.0,165.0 L 292.6,167.2 L 295.1,169.4 L 297.7,171.5 L 300.2,173.7 L 302.8,175.9 L 305.3,178.1 L 307.9,180.2 L 310.4,182.4 L 313.0,184.6 L 315.6,186.7 L 318.1,188.9 L 320.7,191.0 L 323.2,193.1 L 325.8,195.2 L 328.3,197.4 L 330.9,199.5 L 333.4,201.5 L 336.0,203.6 L 338.6,205.7 L 341.1,207.8 L 343.7,209.8 L 346.2,211.8 L 348.8,213.8 L 351.3,215.8 L 353.9,217.8 L 356.4,219.8 L 359.0,221.7 L 361.6,223.7 L 364.1,225.6 L 366.7,227.5 L 369.2,229.4 L 371.8,231.2 L 374.3,233.1 L 376.9,234.9 L 379.4,236.7 L 382.0,238.5 L 384.6,240.2 L 387.1,242.0 L 389.7,243.7 L 392.2,245.3 L 394.8,247.0 L 397.3,248.6 L 399.9,250.2 L 402.4,251.8 L 405.0,253.4 L 407.6,254.9 L 410.1,256.4 L 412.7,257.9 L 415.2,259.3 L 417.8,260.8 L 420.3,262.1 L 422.9,263.5 L 425.4,264.8 L 428.0,266.1 L 430.6,267.4 L 433.1,268.6 L 435.7,269.8 L 438.2,271.0 L 440.8,272.1 L 443.3,273.3 L 445.9,274.3 L 448.4,275.4 L 451.0,276.4 L 453.6,277.3 L 456.1,278.3 L 458.7,279.2 L 461.2,280.1 L 463.8,280.9 L 466.3,281.7 L 468.9,282.5 L 471.4,283.2 L 474.0,283.9 L 476.6,284.5 L 479.1,285.2 L 481.7,285.7 L 484.2,286.3 L 486.8,286.8 L 489.3,287.3 L 491.9,287.7 L 494.4,288.1 L 497.0,288.5 L 499.6,288.8 L 502.1,289.1 L 504.7,289.3 L 507.2,289.5 L 509.8,289.7 L 512.3,289.8 L 514.9,289.9 L 517.4,290.0 L 520.0,290.0" fill="none" stroke="var(--c-pos)" stroke-width="2.8" stroke-linejoin="round"/>
+          <path d="M 60.0,49.9 L 62.6,50.7 L 65.1,51.6 L 67.7,52.6 L 70.2,53.5 L 72.8,54.5 L 75.3,55.6 L 77.9,56.7 L 80.4,57.8 L 83.0,58.9 L 85.6,60.1 L 88.1,61.3 L 90.7,62.5 L 93.2,63.8 L 95.8,65.1 L 98.3,66.4 L 100.9,67.7 L 103.4,69.1 L 106.0,70.5 L 108.6,72.0 L 111.1,73.5 L 113.7,75.0 L 116.2,76.5 L 118.8,78.0 L 121.3,79.6 L 123.9,81.2 L 126.4,82.9 L 129.0,84.5 L 131.6,86.2 L 134.1,87.9 L 136.7,89.6 L 139.2,91.4 L 141.8,93.2 L 144.3,95.0 L 146.9,96.8 L 149.4,98.6 L 152.0,100.5 L 154.6,102.3 L 157.1,104.2 L 159.7,106.2 L 162.2,108.1 L 164.8,110.0 L 167.3,112.0 L 169.9,114.0 L 172.4,116.0 L 175.0,118.0 L 177.6,120.0 L 180.1,122.1 L 182.7,124.1 L 185.2,126.2 L 187.8,128.3 L 190.3,130.4 L 192.9,132.5 L 195.4,134.6 L 198.0,136.7 L 200.6,138.8 L 203.1,141.0 L 205.7,143.1 L 208.2,145.3 L 210.8,147.4 L 213.3,149.6 L 215.9,151.8 L 218.4,153.9 L 221.0,156.1 L 223.6,158.3 L 226.1,160.5 L 228.7,162.6 L 231.2,164.8 L 233.8,167.0 L 236.3,169.2 L 238.9,171.4 L 241.4,173.5 L 244.0,175.7 L 246.6,177.9 L 249.1,180.1 L 251.7,182.2 L 254.2,184.4 L 256.8,186.5 L 259.3,188.7 L 261.9,190.8 L 264.4,192.9 L 267.0,195.1 L 269.6,197.2 L 272.1,199.3 L 274.7,201.4 L 277.2,203.5 L 279.8,205.5 L 282.3,207.6 L 284.9,209.6 L 287.4,211.7 L 290.0,213.7 L 292.6,215.7 L 295.1,217.7 L 297.7,219.6 L 300.2,221.6 L 302.8,223.5 L 305.3,225.4 L 307.9,227.3 L 310.4,229.2 L 313.0,231.1 L 315.6,232.9 L 318.1,234.8 L 320.7,236.6 L 323.2,238.3 L 325.8,240.1 L 328.3,241.8 L 330.9,243.5 L 333.4,245.2 L 336.0,246.9 L 338.6,248.5 L 341.1,250.1 L 343.7,251.7 L 346.2,253.3 L 348.8,254.8 L 351.3,256.3 L 353.9,257.8 L 356.4,259.2 L 359.0,260.6 L 361.6,262.0 L 364.1,263.4 L 366.7,264.7 L 369.2,266.0 L 371.8,267.3 L 374.3,268.5 L 376.9,269.7 L 379.4,270.9 L 382.0,272.1 L 384.6,273.2 L 387.1,274.2 L 389.7,275.3 L 392.2,276.3 L 394.8,277.3 L 397.3,278.2 L 399.9,279.1 L 402.4,280.0 L 405.0,280.8 L 407.6,281.6 L 410.1,282.4 L 412.7,283.1 L 415.2,283.8 L 417.8,284.5 L 420.3,285.1 L 422.9,285.7 L 425.4,286.2 L 428.0,286.8 L 430.6,287.2 L 433.1,287.7 L 435.7,288.1 L 438.2,288.4 L 440.8,288.8 L 443.3,289.0 L 445.9,289.3 L 448.4,289.5 L 451.0,289.7 L 453.6,289.8 L 456.1,289.9 L 458.7,290.0 L 461.2,290.0 L 463.8,290.0 L 466.3,289.9 L 468.9,289.8 L 471.4,289.7 L 474.0,289.5 L 476.6,289.3 L 479.1,289.1 L 481.7,288.8 L 484.2,288.5 L 486.8,288.1 L 489.3,287.7 L 491.9,287.3 L 494.4,286.8 L 497.0,286.3 L 499.6,285.8 L 502.1,285.2 L 504.7,284.6 L 507.2,283.9 L 509.8,283.2 L 512.3,282.5 L 514.9,281.8 L 517.4,281.0 L 520.0,280.1" fill="none" stroke="var(--c-neg)" stroke-width="2.8" stroke-dasharray="8 5" stroke-linejoin="round"/>
+          <line x1="213.3" y1="102.5" x2="154.8" y2="102.5" stroke="var(--ink)" stroke-width="2" marker-start="url(#arP)" marker-end="url(#arP)"/>
+          <text x="184.0" y="93.5" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor">m</text>
+          <line x1="290.0" y1="165.0" x2="290.0" y2="213.7" stroke="var(--ink)" stroke-width="2" marker-end="url(#arP)"/>
+          <text x="298.0" y="193.3" font-size="12" font-weight="600" fill="currentColor">penalización</text>
+          <defs><marker id="arP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink)"/></marker></defs>
+          <text x="89.3" y="32.5" font-size="13" font-weight="600" fill="currentColor">cos θ</text>
+          <text x="330.9" y="265.5" font-size="13" font-weight="600" fill="currentColor">cos(θ + m)</text>
+          <g font-size="11.5" fill="currentColor" opacity=".7" text-anchor="middle">
+            <text x="60.0" y="308">0°</text><text x="175.0" y="308">45°</text><text x="290.0" y="308">90°</text><text x="405.0" y="308">135°</text><text x="520.0" y="308">180°</text>
+          </g>
+          <g font-size="11.5" fill="currentColor" opacity=".7" text-anchor="end">
+            <text x="52" y="294">-1</text><text x="52" y="232">-0.5</text><text x="52" y="169">0</text><text x="52" y="106">0.5</text><text x="52" y="44">1</text>
+          </g>
+          <text x="290" y="328" text-anchor="middle" font-size="12" fill="currentColor" opacity=".75">θ: ángulo entre el embedding y el centro de su clase (m = 0.4)</text>
+        </svg>
+      </figure>
+      <div class="vlist">
+        <ul class="ticks">
+          <li><strong>La distancia horizontal es m.</strong> Para lograr el mismo logit, la clase correcta tiene que estar m radianes (≈ 23°) más cerca de su centro.</li>
+          <li><strong>La distancia vertical es la penalización</strong>: cuánto le baja el logit a la clase correcta a cada ángulo.</li>
+          <li><strong>Después de θ = π − m la curva vuelve a subir</strong>: alejarse del centro <em>premiaría</em>. Una implementación correcta tiene que evitarlo.</li>
+        </ul>
+        <div class="card flat">
+          <p class="small" style="color:var(--ink-soft)">En alta dimensión los vectores al azar nacen casi ortogonales, θ ≈ 90°, así que esa zona casi nunca se pisa. Pero cuando se pisa, el gradiente apunta al revés.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes">Lee la gráfica de izquierda a derecha: a ángulo chico ambas curvas dan logit alto, pero la punteada llega antes a cero. Ése es el "más exigente".</div>
+</section>
+
+<section class="slide" data-sec="Sesión 1 · Funciones de pérdida" data-title="ArcFace sin acos">
+  <div class="head">
+    <p class="eyebrow">Pérdidas · 7 de 8</p>
+    <h2>Cómo se calcula en producción: sin acos</h2>
+  </div>
+  <div class="fill">
+    <div class="cols c2" style="align-items:start">
+      <div class="vlist">
+        <div class="formula" style="line-height:1.9">cos(θ + m) = cos θ · cos m − sin θ · sin m<br><span style="font-size:15px;color:var(--ink-faint)">sin θ = √(1 − cos²θ) &nbsp;·&nbsp; cos m y sin m son constantes</span></div>
+        <ul class="ticks">
+          <li><strong>No se llama <code>acos</code></strong>: su derivada es infinita en ±1, que es justo el bug que hoy ataja el <code>clamp</code> de nuestra versión.</li>
+          <li><strong>Todo sale del coseno que ya se calculó.</strong> cos m y sin m se calculan una vez, al construir la capa.</li>
+          <li>Es como lo implementan insightface y la mayoría de los repos de producción.</li>
+        </ul>
+      </div>
+      <div class="vlist">
+        <div class="card" style="border-color:var(--green);border-width:1.5px">
+          <span class="tag">Punto extra</span>
+          <h3 style="margin-top:12px">Implementen ArcFace así</h3>
+          <p class="small" style="color:var(--ink-soft)">El código que les damos usa <code>acos</code>, que se lee más fácil. Reescribirlo con la identidad trigonométrica es un punto extra.</p>
+        </div>
+        <div class="card">
+          <h3>El reto</h3>
+          <p class="small" style="color:var(--ink-soft)">Cuando θ + m &gt; π, cos(θ + m) vuelve a subir (lámina anterior). Su versión tiene que conservar la monotonía en esa zona. Pista: basta con mirar cos θ; no necesitan θ.</p>
+        </div>
+        <div class="card flat">
+          <p class="small" style="color:var(--ink-soft)"><strong>Cómo se califica:</strong> los mismos logits que la versión con <code>acos</code> donde θ + m ≤ π, y pérdida finita cuando cos θ = ±1.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes">La solución completa está en _solucion/acordeon.md, que no se versiona.</div>
+</section>
+
 <!-- ============ LOSS 6 ============ -->
 <section class="slide" data-sec="Sesión 1 · Funciones de pérdida" data-title="Por qué ArcFace desplazó a triplet">
   <div class="head">
-    <p class="eyebrow">Pérdidas · 6 de 6</p>
+    <p class="eyebrow">Pérdidas · 8 de 8</p>
     <h2>Por qué usamos ArcFace en el ejercicio</h2>
   </div>
   <div class="fill">
@@ -1011,13 +1201,13 @@ body:not(.show-index) #index{display:none}
           <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
 
         <text x="20" y="18" font-size="14" font-weight="600" fill="var(--c-pos)">Verificación · 1:1</text>
-        <text x="20" y="40" font-size="13" fill="currentColor" opacity=".7">“¿Estas dos fotos son de la misma persona?”</text>
+        <text x="20" y="40" font-size="13" fill="currentColor" opacity=".7">“¿Esta selfie es de la persona de la INE?”</text>
         <rect x="20" y="54" width="490" height="150" rx="9" fill="var(--surface)" stroke="var(--c-pos)" stroke-width="1.4"/>
         <rect x="48" y="82" width="62" height="62" rx="5" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.2"/>
         <rect x="48" y="154" width="62" height="34" rx="5" fill="none" stroke="none"/>
         <rect x="128" y="82" width="62" height="62" rx="5" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.2"/>
-        <text x="79" y="118" text-anchor="middle" font-size="11.5" fill="currentColor">A</text>
-        <text x="159" y="118" text-anchor="middle" font-size="11.5" fill="currentColor">B</text>
+        <text x="79" y="118" text-anchor="middle" font-size="11.5" fill="currentColor">selfie</text>
+        <text x="159" y="118" text-anchor="middle" font-size="11.5" fill="currentColor">INE</text>
         <line x1="196" y1="113" x2="238" y2="113" stroke="currentColor" stroke-width="1.5" opacity=".5" marker-end="url(#ar4)"/>
         <rect x="244" y="88" width="106" height="50" rx="6" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.4"/>
         <text x="297" y="110" text-anchor="middle" font-size="12.5" fill="var(--c-pos)">cos(z_A, z_B)</text>
@@ -1033,7 +1223,7 @@ body:not(.show-index) #index{display:none}
         <line x1="540" y1="10" x2="540" y2="280" stroke="currentColor" stroke-width="1" opacity=".2"/>
 
         <text x="570" y="18" font-size="14" font-weight="600" fill="var(--c-neg)">Identificación · 1:N</text>
-        <text x="570" y="40" font-size="13" fill="currentColor" opacity=".7">“¿Quién es esta persona, de entre las que conozco?”</text>
+        <text x="570" y="40" font-size="13" fill="currentColor" opacity=".7">“¿Quién entró por el torniquete, de entre los empleados?”</text>
         <rect x="570" y="54" width="490" height="150" rx="9" fill="var(--surface)" stroke="var(--c-neg)" stroke-width="1.4"/>
         <rect x="596" y="88" width="58" height="58" rx="5" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.2"/>
         <text x="625" y="121" text-anchor="middle" font-size="11.5" fill="currentColor">query</text>
@@ -1055,7 +1245,7 @@ body:not(.show-index) #index{display:none}
         <text x="815" y="252" font-size="13" fill="currentColor" opacity=".72">correcto quedó entre los primeros k.</text>
         <text x="815" y="276" font-size="12.5" font-weight="600" fill="var(--c-5)">Métricas: Recall@k · mAP</text>
       </svg>
-      <figcaption>Elegir el protocolo es elegir el producto. Un control de acceso hace verificación; un buscador de catálogo hace identificación. El mismo modelo puede ser bueno en uno y mediocre en el otro.</figcaption>
+      <figcaption>La diferencia es si alguien <strong>afirma</strong> una identidad. Validar una selfie contra la INE al abrir una cuenta es verificación: hay una afirmación y un solo par. Reconocer quién entra sin que muestre nada es identificación. Hasta un control de acceso cambia de protocolo según si pide tarjeta.</figcaption>
     </figure>
   </div>
 </section>
@@ -1725,7 +1915,7 @@ body:not(.show-index) #index{display:none}
     <div class="cols c2" style="align-items:start">
       <div class="vlist">
         <figure>
-          <svg viewBox="0 0 480 220" role="img" aria-label="Las identidades se reparten primero: unas van completas a entrenamiento y otras a prueba; después, dentro de las identidades de prueba, sus imágenes se reparten entre galería y consultas.">
+          <svg viewBox="0 0 480 220" role="img" aria-label="Las identidades se reparten primero entre entrenamiento y prueba. Después, dentro de entrenamiento se apartan unas fotos para validación, y dentro de prueba las imágenes se reparten entre galería y consultas.">
             <text x="16" y="16" font-size="12.5" font-weight="600" fill="currentColor" opacity=".7">1 · repartir IDENTIDADES</text>
             <rect x="16" y="26" width="200" height="52" rx="7" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.6"/>
             <text x="116" y="48" text-anchor="middle" font-size="13" font-weight="600" fill="var(--c-pos)">train · 70% de las ids</text>
@@ -1734,17 +1924,27 @@ body:not(.show-index) #index{display:none}
             <text x="347" y="48" text-anchor="middle" font-size="13" font-weight="600" fill="var(--c-5)">test · 30% de las ids</text>
             <text x="347" y="67" text-anchor="middle" font-size="11.5" fill="var(--c-5)" opacity=".9">jamás vistas al entrenar</text>
             <path d="M 347 84 L 347 104" stroke="var(--c-5)" stroke-width="1.8" fill="none"/>
-            <text x="16" y="126" font-size="12.5" font-weight="600" fill="currentColor" opacity=".7">2 · dentro de test, repartir IMÁGENES</text>
+            <path d="M 116 84 L 116 104" stroke="var(--c-pos)" stroke-width="1.8" fill="none"/>
+            <text x="16" y="126" font-size="12.5" font-weight="600" fill="currentColor" opacity=".7">2 · dentro de cada lado, repartir IMÁGENES</text>
             <rect x="230" y="136" width="112" height="52" rx="7" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.4"/>
             <text x="286" y="158" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">galería</text>
             <text x="286" y="176" text-anchor="middle" font-size="11" fill="currentColor" opacity=".65">~50% por id</text>
             <rect x="352" y="136" width="112" height="52" rx="7" fill="var(--surface-2)" stroke="currentColor" stroke-width="1.4"/>
             <text x="408" y="158" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">queries</text>
             <text x="408" y="176" text-anchor="middle" font-size="11" fill="currentColor" opacity=".65">el otro ~50%</text>
-            <text x="116" y="164" text-anchor="middle" font-size="12" fill="var(--c-pos)" opacity=".8">(train no se subdivide)</text>
+            <rect x="16" y="136" width="112" height="52" rx="7" fill="var(--c-pos-soft)" stroke="var(--c-pos)" stroke-width="1.4"/>
+            <text x="72" y="158" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--c-pos)">train</text>
+            <text x="72" y="176" text-anchor="middle" font-size="11" fill="var(--c-pos)" opacity=".85">~90%: aprende</text>
+            <rect x="138" y="136" width="78" height="52" rx="7" fill="var(--surface-2)" stroke="var(--c-pos)" stroke-width="1.4" stroke-dasharray="4 3"/>
+            <text x="177" y="158" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">val</text>
+            <text x="177" y="176" text-anchor="middle" font-size="11" fill="currentColor" opacity=".65">elige época</text>
             <text x="240" y="212" text-anchor="middle" font-size="12" fill="var(--c-5)" font-weight="600">Nunca al revés: repartir imágenes primero es la fuga.</text>
           </svg>
         </figure>
+        <div class="card flat">
+          <h3>Validación: fotos nuevas de identidades conocidas</h3>
+          <p class="small" style="color:var(--ink-soft)">Solo elige la época, comparando contra los centros de ArcFace. Sale optimista, pero únicamente ordena épocas: <strong>prueba se mide una sola vez, al final.</strong> Con datos de sobra se valida con identidades nuevas (partir en tres); aquí cada identidad cuenta.</p>
+        </div>
       </div>
       <div class="vlist">
 <pre><span class="kw">def</span> <span class="fn">make_open_set_split</span>(
@@ -1752,6 +1952,7 @@ body:not(.show-index) #index{display:none}
     test_frac: float = <span class="nu">0.3</span>,
     test_ids: list[str] | <span class="kw">None</span> = <span class="kw">None</span>,
     gallery_frac: float = <span class="nu">0.5</span>,
+    val_frac: float = <span class="nu">0.1</span>,
     min_images: int = <span class="nu">2</span>,
     seed: int = <span class="nu">0</span>,
 ) -&gt; Split:
@@ -1759,11 +1960,12 @@ body:not(.show-index) #index{display:none}
     <span class="todo">...</span>  <span class="cm"># ← su trabajo</span></pre>
         <div class="card">
           <h3>La prueba que tiene que pasar</h3>
-          <p class="small" style="color:var(--ink-soft)">El repo trae un test que falla si <code>set(train_ids) &amp; set(test_ids)</code> no está vacío. Si ese test pasa, ya libraron el error más caro del curso.</p>
+          <p class="small" style="color:var(--ink-soft)">Un test falla si <code>set(train_ids) &amp; set(test_ids)</code> no está vacío. Si pasa, ya libraron el error más caro del curso.</p>
         </div>
       </div>
     </div>
   </div>
+  <div class="notes">Si preguntan por qué no medir prueba en cada época: quedarse con la mejor época según prueba es usar prueba para decidir, y el número sale inflado. Lo medimos: en MNIST, 0.978 eligiendo con prueba contra 0.968 con validación.</div>
 </section>
 
 <!-- ============ DATOS 3 ============ -->
@@ -1843,9 +2045,9 @@ body:not(.show-index) #index{display:none}
           <p class="small" style="color:var(--ink-soft)">Recorre las carpetas, arma la lista de <code>(ruta, id)</code>, asigna el entero de clase y devuelve el tensor transformado.</p>
         </div>
         <div class="card">
-          <span class="tag neg">~30 líneas</span>
+          <span class="tag neg">~35 líneas</span>
           <h3 style="margin-top:12px"><code>make_open_set_split</code></h3>
-          <p class="small" style="color:var(--ink-soft)">Reparte identidades entre train y test, y dentro de test separa galería y queries. Sin fuga.</p>
+          <p class="small" style="color:var(--ink-soft)">Reparte identidades entre train y test; dentro de test separa galería y queries, y aparta unas fotos de train para validar. Sin fuga.</p>
         </div>
         <div class="card">
           <span class="tag neg">~15 líneas</span>
@@ -1855,7 +2057,7 @@ body:not(.show-index) #index{display:none}
       </div>
       <div class="card" style="border-color:var(--green);border-width:1.5px">
         <h3>Y el trabajo de verdad: los datos</h3>
-        <p class="body" style="max-width:none">Elegir el dataset, convertirlo a carpeta-por-identidad, mirarlo, limpiarlo, decidir cuántas imágenes por identidad y qué augmentations tienen sentido. <strong>Son 85 líneas de código y una semana de decisiones sobre datos.</strong> Esa proporción es a propósito.</p>
+        <p class="body" style="max-width:none">Elegir el dataset, convertirlo a carpeta-por-identidad, mirarlo, limpiarlo, decidir cuántas imágenes por identidad y qué augmentations tienen sentido. <strong>Son 90 líneas de código y una semana de decisiones sobre datos.</strong> Esa proporción es a propósito.</p>
       </div>
       <div class="cols c2" style="gap:18px">
         <div class="card flat"><p class="small" style="color:var(--ink-soft)"><strong>Todos corren el sintético común</strong> (<code>make_synthetic.py</code> sin argumentos: los mismos 200 glifos para todos). Es la única columna comparable entre equipos.</p></div>
@@ -1901,6 +2103,7 @@ body:not(.show-index) #index{display:none}
       <thead><tr><th style="width:34%">Extra</th><th style="width:14%">Dificultad</th><th>Qué tienen que mostrar</th></tr></thead>
       <tbody>
         <tr><td class="k">Triplet loss con batch-hard</td><td>Media</td><td>La comparación contra ArcFace en el mismo dataset. Digan también cuánto código extra costó.</td></tr>
+        <tr><td class="k">ArcFace sin <code>acos</code></td><td>Media</td><td>Los mismos logits que la versión dada, y cómo resolvieron θ + m &gt; π.</td></tr>
         <tr><td class="k">CosFace</td><td>Baja</td><td>Ambas curvas y una lectura de si la diferencia es real o ruido entre corridas.</td></tr>
         <tr><td class="k">Sampler balanceado por clase</td><td>Media</td><td>Un dataset desbalanceado a propósito, con y sin sampler.</td></tr>
         <tr><td class="k">Fine-tuning por capas</td><td>Media</td><td>Backbone congelado vs. últimas capas vs. todo. Incluyan el tiempo de entrenamiento.</td></tr>
@@ -2134,6 +2337,7 @@ python scripts/make_synthetic.py</pre>
     <h1>Gracias</h1>
     <p class="lede" style="margin-top:20px">Código y láminas: <span style="color:#fff">github.com/felipegerard/intro-to-embeddings</span></p>
     <div class="meta">
+      <div><dt>Imparte</dt><dd>Felipe Gerard Valdés</dd></div>
       <div><dt>Código</dt><dd>MIT</dd></div>
       <div><dt>Material</dt><dd>CC BY-NC-ND 4.0</dd></div>
     </div>

@@ -20,7 +20,7 @@ def test_every_query_identity_is_in_gallery(tree):
 
 def test_each_image_used_once(tree):
     split = make_open_set_split(tree, test_frac=0.3, seed=0)
-    paths = [path for path, _ in split.train + split.gallery + split.query]
+    paths = [path for path, _ in split.train + split.val + split.gallery + split.query]
     assert len(paths) == len(set(paths))
 
 
@@ -63,3 +63,26 @@ def test_seed_changes_split(tree):
     a = make_open_set_split(tree, seed=0)
     b = make_open_set_split(tree, seed=1)
     assert ids(a.gallery) != ids(b.gallery)
+
+
+def test_val_comes_from_train_identities(tree):
+    split = make_open_set_split(tree, test_frac=0.3, val_frac=0.2, seed=0)
+    assert split.val
+    assert ids(split.val) <= ids(split.train)
+    assert {p for p, _ in split.val}.isdisjoint(p for p, _ in split.train)
+
+
+def test_val_leaves_two_images_to_train(tree):
+    split = make_open_set_split(tree, test_frac=0.3, val_frac=0.5, seed=0)
+    for identity in ids(split.val):
+        assert sum(1 for _, i in split.train if i == identity) >= 2
+
+
+def test_val_frac_zero(tree):
+    assert make_open_set_split(tree, test_frac=0.3, val_frac=0, seed=0).val == []
+
+
+def test_val_does_not_move_the_test_split(tree):
+    a = make_open_set_split(tree, test_frac=0.3, val_frac=0, seed=0)
+    b = make_open_set_split(tree, test_frac=0.3, val_frac=0.2, seed=0)
+    assert (a.gallery, a.query) == (b.gallery, b.query)

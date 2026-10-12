@@ -14,6 +14,7 @@ class Config:
     # si se da, estas identidades van a prueba y se ignora test_frac (MNIST: 8 y 9)
     test_ids: list[str] | None = None
     gallery_frac: float = 0.5
+    val_frac: float = 0.1
     min_images: int = 2
     image_size: int = 32
     grayscale: bool = True
