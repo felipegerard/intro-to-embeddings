@@ -1013,7 +1013,7 @@ body:not(.show-index) #index{display:none}
       </figure>
       <div class="vlist" style="gap:12px">
         <p class="body" style="max-width:none">Ya no comparamos pares ni tercias. Cada identidad de entrenamiento tiene un <strong>prototipo</strong> W<sub>j</sub>, y cada embedding se compara contra todos ellos.</p>
-        <div class="formula" style="font-size:16px;line-height:1.75">logit<sub>j</sub> = W<sub>j</sub>ᵀz + b<sub>j</sub><br><span style="color:var(--ink-faint);font-size:14.5px">sin sesgo, con ‖W<sub>j</sub>‖ = ‖z‖ = 1 &nbsp;→</span>&nbsp; logit<sub>j</sub> = cos θ<sub>j</sub></div>
+        <div class="formula" style="font-size:16px;line-height:1.8">logit<sub>j</sub> = W<sub>j</sub>ᵀz + b<sub>j</sub><span style="color:var(--ink-faint);font-size:13.5px">&nbsp; ← la capa FC de siempre</span><br>&nbsp;&nbsp;→ W<sub>j</sub>ᵀz<span style="color:var(--ink-faint);font-size:13.5px">&nbsp; ← fuera b<sub>j</sub>: es una constante por clase, no mide parecido</span><br>&nbsp;&nbsp;→ cos θ<sub>j</sub><span style="color:var(--ink-faint);font-size:13.5px">&nbsp; ← con ‖W<sub>j</sub>‖ = ‖z‖ = 1</span></div>
         <ul class="ticks" style="font-size:15.5px;gap:8px">
           <li>W es la matriz de pesos de la capa FC de siempre: <strong>una fila por identidad</strong>.</li>
           <li>Al normalizar, prototipos y embeddings viven en la esfera, y el logit es el <strong>ángulo</strong> al prototipo.</li>
@@ -1050,33 +1050,64 @@ body:not(.show-index) #index{display:none}
         </div>
       </div>
       <figure>
-        <svg viewBox="0 0 460 350" role="img" aria-label="Sobre el círculo unitario, la muestra z está a un ángulo theta uno del centro de su clase y theta dos del centro de la otra; el margen angular exige que theta uno más el margen siga siendo menor que theta dos.">
-          <circle cx="200" cy="192" r="138" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".28"/>
-          <line x1="200" y1="192" x2="322" y2="127" stroke="currentColor" stroke-width="1.4" stroke-dasharray="5 5" opacity=".45"/>
-          <text x="330" y="131" font-size="11.5" fill="currentColor" opacity=".55">frontera</text>
-          <line x1="200" y1="192" x2="224" y2="56" stroke="var(--c-pos)" stroke-width="3"/>
-          <circle cx="224" cy="56" r="8" fill="var(--c-pos)"/>
-          <text x="224" y="40" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--c-pos)">W₁</text>
-          <line x1="200" y1="192" x2="326" y2="248" stroke="var(--c-neg)" stroke-width="3"/>
-          <rect x="318" y="240" width="16" height="16" rx="3" fill="var(--c-neg)"/>
-          <text x="342" y="264" font-size="13.5" font-weight="600" fill="var(--c-neg)">W₂</text>
-          <line x1="200" y1="192" x2="296" y2="93" stroke="var(--ink)" stroke-width="2.6"/>
-          <circle cx="296" cy="93" r="8" fill="var(--ink)"/>
-          <text x="310" y="87" font-size="13.5" font-weight="600" fill="currentColor">z</text>
-          <path d="M 251,139 A 74 74 0 0 0 213,119" fill="none" stroke="var(--c-pos)" stroke-width="2.2"/>
-          <text x="238" y="108" font-size="14" font-weight="600" fill="var(--c-pos)">θ₁</text>
-          <path d="M 248,213 A 52 52 0 0 0 236,155" fill="none" stroke="var(--c-neg)" stroke-width="2.2"/>
-          <text x="262" y="214" font-size="14" font-weight="600" fill="var(--c-neg)">θ₂</text>
-          <path d="M 269,120 A 100 100 0 0 0 241,101" fill="none" stroke="var(--c-5)" stroke-width="3.4"/>
-          <text x="285" y="114" font-size="14" font-weight="600" fill="var(--c-5)">m</text>
-          <circle cx="200" cy="192" r="4" fill="currentColor"/>
-          <text x="200" y="322" text-anchor="middle" font-size="13.5" fill="currentColor" opacity=".78">sin margen basta con θ₁ &lt; θ₂</text>
-          <text x="200" y="342" text-anchor="middle" font-size="13.5" fill="var(--c-5)" font-weight="600">con margen se exige θ₁ + m &lt; θ₂</text>
+        <svg viewBox="0 0 536 252" role="img" aria-label="Dos paneles con los mismos prototipos. Sin margen, la frontera es la bisectriz y basta con que z quede del lado de W1. Con margen, la frontera original queda al centro de una franja de ancho m; cada clase tiene su nueva frontera en un borde de la franja, y z solo cuenta como acierto si cruza la de W1.">
+          <defs><pattern id="hatchM" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="var(--c-5)" fill-opacity=".1"/><line x1="0" y1="0" x2="0" y2="7" stroke="var(--c-5)" stroke-width="2.2" opacity=".55"/></pattern></defs>
+          <text x="128" y="14" text-anchor="middle" font-size="14" font-weight="600" fill="currentColor">sin margen</text>
+          <text x="408" y="14" text-anchor="middle" font-size="14" font-weight="600" fill="var(--c-5)">con margen m</text>
+          <path d="M 28 182 A 100 100 0 0 1 228 182" fill="none" stroke="currentColor" stroke-width="1.3" opacity=".3"/>
+          <line x1="28" y1="182" x2="228" y2="182" stroke="currentColor" stroke-width="1" opacity=".2"/>
+          <path d="M 128 182 L 28.0 182.0 A 100 100 0 0 1 128.0 82.0 Z" fill="var(--c-pos)" fill-opacity=".16"/>
+          <path d="M 128 182 L 128.0 82.0 A 100 100 0 0 1 228.0 182.0 Z" fill="var(--c-neg)" fill-opacity=".18"/>
+          <line x1="128" y1="182" x2="128.0" y2="68.0" stroke="currentColor" stroke-width="1.8" opacity="0.6"/>
+          <text x="132.0" y="64.0" text-anchor="start" font-size="11.5" font-weight="400" fill="currentColor">frontera</text>
+          <line x1="128" y1="182" x2="41.4" y2="132.0" stroke="var(--c-pos)" stroke-width="3" opacity="1"/>
+          <line x1="128" y1="182" x2="214.6" y2="132.0" stroke="var(--c-neg)" stroke-width="3" opacity="1"/>
+          <line x1="128" y1="182" x2="117.5" y2="82.5" stroke="var(--ink)" stroke-width="2.6" opacity="1"/>
+          <circle cx="41.4" cy="132.0" r="8" fill="var(--c-pos)"/>
+          <rect x="206.6" y="124.0" width="16" height="16" rx="2.5" fill="var(--c-neg)"/>
+          <circle cx="117.5" cy="82.5" r="7" fill="var(--ink)" stroke="var(--paper)" stroke-width="2"/>
+          <text x="16.7" y="142.0" text-anchor="middle" font-size="14" font-weight="600" fill="var(--c-pos)">W₁</text>
+          <text x="239.3" y="142.0" text-anchor="middle" font-size="14" font-weight="600" fill="var(--c-neg)">W₂</text>
+          <text x="109.2" y="103.5" text-anchor="end" font-size="14" font-weight="600" fill="currentColor">z</text>
+          <path d="M 93.4 162.0 A 40 40 0 0 1 123.8 142.2" fill="none" stroke="var(--c-pos)" stroke-width="2.4"/>
+          <text x="98.0" y="140.9" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--c-pos)">θ₁</text>
+          <path d="M 121.5 120.3 A 62 62 0 0 1 181.7 151.0" fill="none" stroke="var(--c-neg)" stroke-width="2.4"/>
+          <text x="163.0" y="118.4" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--c-neg)">θ₂</text>
+          <circle cx="128" cy="182" r="3.5" fill="currentColor"/>
+          <path d="M 308 182 A 100 100 0 0 1 508 182" fill="none" stroke="currentColor" stroke-width="1.3" opacity=".3"/>
+          <line x1="308" y1="182" x2="508" y2="182" stroke="currentColor" stroke-width="1" opacity=".2"/>
+          <path d="M 408 182 L 308.0 182.0 A 100 100 0 0 1 388.1 84.0 Z" fill="var(--c-pos)" fill-opacity=".16"/>
+          <path d="M 408 182 L 388.1 84.0 A 100 100 0 0 1 427.9 84.0 Z" fill="url(#hatchM)" fill-opacity="1"/>
+          <path d="M 408 182 L 427.9 84.0 A 100 100 0 0 1 508.0 182.0 Z" fill="var(--c-neg)" fill-opacity=".18"/>
+          <line x1="408" y1="182" x2="385.7" y2="72.2" stroke="var(--c-5)" stroke-width="2" opacity="0.95"/>
+          <line x1="408" y1="182" x2="430.3" y2="72.2" stroke="var(--c-5)" stroke-width="2" opacity="0.95"/>
+          <path d="M 386.9 78.1 A 106 106 0 0 1 429.1 78.1" fill="none" stroke="var(--c-5)" stroke-width="3.6"/>
+          <text x="381.7" y="74.2" text-anchor="end" font-size="11" font-weight="600" fill="var(--c-5)">nueva frontera W₁</text>
+          <text x="434.3" y="74.2" text-anchor="start" font-size="11" font-weight="600" fill="var(--c-5)">nueva frontera W₂</text>
+          <text x="395.5" y="67.7" text-anchor="middle" font-size="14" font-weight="600" fill="var(--c-5)">m</text>
+          <line x1="408" y1="182" x2="408.0" y2="52.0" stroke="currentColor" stroke-width="1.6" opacity="0.55"/>
+          <text x="408.0" y="47.0" text-anchor="middle" font-size="11.5" font-weight="400" fill="currentColor">frontera</text>
+          <line x1="408" y1="182" x2="321.4" y2="132.0" stroke="var(--c-pos)" stroke-width="3" opacity="1"/>
+          <line x1="408" y1="182" x2="494.6" y2="132.0" stroke="var(--c-neg)" stroke-width="3" opacity="1"/>
+          <line x1="408" y1="182" x2="367.3" y2="90.6" stroke="var(--ink)" stroke-width="2.6" opacity="1"/>
+          <circle cx="321.4" cy="132.0" r="8" fill="var(--c-pos)"/>
+          <rect x="486.6" y="124.0" width="16" height="16" rx="2.5" fill="var(--c-neg)"/>
+          <circle cx="367.3" cy="90.6" r="7" fill="var(--ink)" stroke="var(--paper)" stroke-width="2"/>
+          <text x="296.7" y="142.0" text-anchor="middle" font-size="14" font-weight="600" fill="var(--c-pos)">W₁</text>
+          <text x="519.3" y="142.0" text-anchor="middle" font-size="14" font-weight="600" fill="var(--c-neg)">W₂</text>
+          <text x="363.8" y="110.3" text-anchor="end" font-size="14" font-weight="600" fill="currentColor">z</text>
+          <circle cx="408" cy="182" r="3.5" fill="currentColor"/>
+          <line x1="268" y1="26" x2="268" y2="244" stroke="currentColor" stroke-width="1" opacity=".18"/>
+          <text x="128" y="214" text-anchor="middle" font-size="12.5" fill="currentColor">gana la clase más cercana: θ₁ &lt; θ₂</text>
+          <text x="128" y="234" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">basta con quedar del lado de W₁</text>
+          <text x="408" y="214" text-anchor="middle" font-size="12.5" fill="currentColor">hay que ganar por m: θ₁ + m &lt; θ₂</text>
+          <text x="408" y="234" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--c-5)">z tiene que cruzar la nueva frontera de W₁</text>
         </svg>
+        <figcaption>Con margen, entre la zona de W₁ y la de W₂ queda una franja de ancho m, con la frontera original en medio. Cada embedding cuenta como acierto solo si cruza la nueva frontera de su clase; la pérdida empuja a los que quedan en la franja.</figcaption>
       </figure>
     </div>
   </div>
-  <div class="notes">Si preguntan por qué sumar al ángulo y no al coseno: el ángulo es una distancia geodésica sobre la esfera, así que el margen es constante en toda la esfera. Con cos θ − m el margen efectivo cambia según dónde estés.</div>
+  <div class="notes">Si preguntan por qué sumar al ángulo y no al coseno: el ángulo es una distancia geodésica sobre la esfera, así que el margen es constante en toda la esfera. Con cos θ − m el margen efectivo cambia según dónde estés. <b>Si preguntan por qué cada nueva frontera está a m/2 de la original:</b> entre los dos prototipos θ₁ + θ₂ es fijo (120° en el dibujo), así que θ₁ + m &lt; θ₂ equivale a θ₁ &lt; 60° − m/2: acercarse m/2 baja θ₁ en m/2 y sube θ₂ en m/2. Es el caso 2D; en alta dimensión la regla general es θ₁ + m &lt; θⱼ contra el rival más cercano. Y en inferencia no hay margen: es solo una exigencia de entrenamiento.</div>
 </section>
 
 <section class="slide" data-sec="Sesión 1 · Funciones de pérdida" data-title="El margen en una gráfica">
